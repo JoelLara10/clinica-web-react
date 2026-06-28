@@ -55,7 +55,14 @@ export default function Sidebar({ isOpen, onClose }) {
     : 'general';
 
   const handleNav = (path) => {
-    navigate(path);
+    const patientState = selectedPatient?.id_atencion
+      ? {
+          id_atencion: selectedPatient.id_atencion,
+          Id_exp: selectedPatient?.Id_exp,
+        }
+      : undefined;
+
+    navigate(path, { state: patientState });
     onClose?.();
   };
 

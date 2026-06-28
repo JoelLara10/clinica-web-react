@@ -3,6 +3,23 @@ import { useAuth } from '../context/AuthContext';
 import LoginScreen from '../pages/auth/LoginScreen';
 import MainLayout from '../components/layout/MainLayout';
 import DashboardScreen from '../pages/dashboard/DashboardScreen';
+import EnfermeriaScreen from '../pages/enfermeria/EnfermeriaScreen';
+import PatientDetailScreen from '../pages/enfermeria/PatientDetailScreen';
+import EnfermeriaVitalSignsScreen from '../pages/enfermeria/EnfermeriaVitalSignsScreen';
+import EnfermeriaNoteScreen from '../pages/enfermeria/EnfermeriaNoteScreen';
+import EnfermeriaMedicationsScreen from '../pages/enfermeria/EnfermeriaMedicationsScreen';
+import MedicoScreen from '../pages/medico/MedicoScreen';
+import MedicoPatientDetailScreen from '../pages/medico/PatientDetailScreen';
+import VitalSignsScreen from '../pages/medico/VitalSignsScreen';
+import MedicalNoteScreen from '../pages/medico/MedicalNoteScreen';
+import DiagnosisScreen from '../pages/medico/DiagnosisScreen';
+import HistoriaClinicaScreen from '../pages/medico/HistoriaClinicaScreen';
+import PrescriptionScreen from '../pages/medico/PrescriptionScreen';
+import LabExamsScreen from '../pages/medico/LabExamsScreen';
+import ImagingExamsScreen from '../pages/medico/ImagingExamsScreen';
+import PrintDocsScreen from '../pages/medico/PrintDocsScreen';
+import StudyResultsScreen from '../pages/medico/StudyResultsScreen';
+import VitalSignsListScreen from '../pages/medico/VitalSignsListScreen';
 
 // Placeholder - irás reemplazando con los componentes reales
 const Placeholder = ({ name }) => (
@@ -59,26 +76,29 @@ export default function AppRouter() {
 
                 {/* Médico */}
                 {(isAdmin || isMedico) && <>
-                  <Route path="/medico"                    element={<Placeholder name="Panel Médico" />} />
-                  <Route path="/medico/paciente/:id"       element={<Placeholder name="Detalle Paciente" />} />
-                  <Route path="/medico/historia-clinica"   element={<Placeholder name="Historia Clínica" />} />
-                  <Route path="/medico/signos-vitales"     element={<Placeholder name="Signos Vitales" />} />
-                  <Route path="/medico/nota-medica"        element={<Placeholder name="Nota Médica" />} />
-                  <Route path="/medico/diagnostico"        element={<Placeholder name="Diagnóstico" />} />
-                  <Route path="/medico/receta"             element={<Placeholder name="Receta" />} />
-                  <Route path="/medico/lab-exams"          element={<Placeholder name="Exámenes Lab" />} />
-                  <Route path="/medico/imaging-exams"      element={<Placeholder name="Exámenes Gabinete" />} />
-                  <Route path="/medico/imprimir"           element={<Placeholder name="Imprimir Docs" />} />
-                  <Route path="/medico/resultados"         element={<Placeholder name="Resultados" />} />
+                  <Route path="/medico"                    element={<MedicoScreen />} />
+                  <Route path="/medico/paciente/:id"       element={<MedicoPatientDetailScreen />} />
+                  <Route path="/medico/paciente/:idAtencion/:idExp" element={<MedicoPatientDetailScreen />} />
+                  <Route path="/medico/historia-clinica"   element={<HistoriaClinicaScreen />} />
+                  <Route path="/medico/signos-vitales"     element={<VitalSignsScreen />} />
+                  <Route path="/medico/signos-vitales/historial" element={<VitalSignsListScreen />} />
+                  <Route path="/medico/nota-medica"        element={<MedicalNoteScreen />} />
+                  <Route path="/medico/diagnostico"        element={<DiagnosisScreen />} />
+                  <Route path="/medico/receta"             element={<PrescriptionScreen />} />
+                  <Route path="/medico/lab-exams"          element={<LabExamsScreen />} />
+                  <Route path="/medico/imaging-exams"      element={<ImagingExamsScreen />} />
+                  <Route path="/medico/imprimir"           element={<PrintDocsScreen />} />
+                  <Route path="/medico/resultados"         element={<StudyResultsScreen />} />
                 </>}
 
                 {/* Enfermería */}
                 {(isAdmin || isEnfermeria) && <>
-                  <Route path="/enfermeria"                  element={<Placeholder name="Panel Enfermería" />} />
-                  <Route path="/enfermeria/paciente/:id"     element={<Placeholder name="Detalle Paciente" />} />
-                  <Route path="/enfermeria/signos-vitales"   element={<Placeholder name="Signos Vitales" />} />
-                  <Route path="/enfermeria/nota"             element={<Placeholder name="Nota Enfermería" />} />
-                  <Route path="/enfermeria/medicamentos"     element={<Placeholder name="Medicamentos" />} />
+                  <Route path="/enfermeria"                  element={<EnfermeriaScreen />} />
+                  <Route path="/enfermeria/paciente/:id"     element={<PatientDetailScreen />} />
+                  <Route path="/enfermeria/paciente/:idAtencion/:idExp" element={<PatientDetailScreen />} />
+                  <Route path="/enfermeria/signos-vitales"   element={<EnfermeriaVitalSignsScreen />} />
+                  <Route path="/enfermeria/nota"             element={<EnfermeriaNoteScreen />} />
+                  <Route path="/enfermeria/medicamentos"     element={<EnfermeriaMedicationsScreen />} />
                 </>}
 
                 {/* Estudios */}

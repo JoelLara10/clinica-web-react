@@ -1,0 +1,198 @@
+import { useEffect, useMemo, useState } from 'react';
+import { useLocation, useNavigate } from 'react-router-dom';
+import { FiArrowLeft, FiFileText, FiPrinter, FiShield, FiUser } from 'react-icons/fi';
+import { MdMedication, MdOutlineScreenshotMonitor } from 'react-icons/md';
+import { usePatient } from '../../context/PatientContext';
+import api from '../../services/api';
+
+function getPatientName(patientInfo) {
+  if (!patientInfo) return 'Paciente';
+  return [patientInfo.papell, patientInfo.sapell, patientInfo.nom_pac].filter(Boolean).join(' ') || 'Paciente';
+}
+
+export default function PrintDocsScreen() {
+  const navigate = useNavigate();
+  const location = useLocation();
+  const { selectedPatient } = usePatient();
+  const idAtencion = selectedPatient?.id_atencion || location.state?.id_atencion;
+  const idExp = selectedPatient?.Id_exp || location.state?.Id_exp;
+  const [loading, setLoading] = useState(true);
+  const [loadingDoc, setLoadingDoc] = useState('');
+  const [errorMessage, setErrorMessage] = useState('');
+  const [patientInfo, setPatientInfo] = useState(null);
+
+  const patientLabel = useMemo(() => `Exp: ${idExp || 'N/A'} | Atención: ${idAtencion || 'N/A'}`, [idAtencion, idExp]);
+
+  useEffect(() => {
+    if (!idAtencion || !idExp) {
+      setErrorMessage('Selecciona un paciente antes de imprimir documentos.');
+      setLoading(false);
+      return;
+    }
+
+    setErrorMessage('');
+
+    const loadPatientInfo = async () => {
+      setLoading(true);
+      try {
+        const response = await api.get(`/paciente/${idAtencion}/${idExp}`);
+        setPatientInfo(response.data?.paciente || null);
+      } catch (error) {
+        console.error('Error loading patient info for print docs:', error);
+        setErrorMessage('No se pudo cargar la información del paciente.');
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    loadPatientInfo();
+  }, [idAtencion, idExp]);
+
+  const openPdfUrl = (path) => {
+    const baseUrl = api.defaults.baseURL || '';
+    const url = `${baseUrl.replace('/api/v1', '')}${path}`;
+    window.open(url, '_blank', 'noopener,noreferrer');
+  };
+
+  const handlePrint = async (documentType) => {
+    if (!idAtencion) return;
+
+    setLoadingDoc(documentType);
+    try {
+      switch (documentType) {
+        case 'vital-signs': {
+          const response = await api.get(`/appointments/${idAtencion}/vital-signs`);
+          const lastItem = Array.isArray(response.data) ? response.data[0] : null;
+          if (!lastItem?.id_signos) throw new Error('No hay signos vitales');
+          openPdfUrl(`/pdf/vital-signs/${lastItem.id_signos}`);
+          break;
+        }
+        case 'medical-note': {
+          const response = await api.get(`/appointments/${idAtencion}/medical-notes`);
+          const lastItem = Array.isArray(response.data) ? response.data[0] : null;
+          if (!lastItem?.id_nota) throw new Error('No hay notas médicas');
+          openPdfUrl(`/pdf/medical-note/${lastItem.id_nota}`);
+          break;
+        }
+        case 'diagnosis': {
+          const response = await api.get(`/appointments/${idAtencion}/diagnosis`);
+          if (!response.data?.id_diagnostico) throw new Error('No hay diagnóstico');
+          openPdfUrl(`/pdf/diagnosis/${response.data.id_diagnostico}`);
+          break;
+        }
+        case 'prescription': {
+          const response = await api.get(`/appointments/${idAtencion}/prescriptions`);
+          const lastItem = Array.isArray(response.data) ? response.data[0] : null;
+          if (!lastItem?.id_receta) throw new Error('No hay recetas');
+          openPdfUrl(`/pdf/prescription/${lastItem.id_receta}`);
+          break;
+        }
+        case 'lab-exams': {
+          const response = await api.get(`/exams/requested/${idAtencion}?type=LABORATORIO`);
+          const lastItem = Array.isArray(response.data) ? response.data[0] : null;
+          if (!lastItem?.id_examen) throw new Error('No hay exámenes de laboratorio');
+          openPdfUrl(`/pdf/lab/${lastItem.id_examen}`);
+          break;
+        }
+        case 'imaging-exams': {
+          const response = await api.get(`/exams/requested/${idAtencion}?type=GABINETE`);
+          const lastItem = Array.isArray(response.data) ? response.data[0] : null;
+          if (!lastItem?.id_examen) throw new Error('No hay exámenes de gabinete');
+          openPdfUrl(`/pdf/imaging/${lastItem.id_examen}`);
+          break;
+        }
+        default:
+          break;
+      }
+    } catch (error) {
+      console.error('Error printing document:', error);
+      window.alert(error.message || 'No se pudo preparar el documento para imprimir');
+    } finally {
+      setLoadingDoc('');
+    }
+  };
+
+  const printItems = [
+    { id: 'vital-signs', title: 'Signos Vitales', description: 'Último registro disponible', icon: FiFileText, color: '#dc2626', accent: '#fef2f2' },
+    { id: 'medical-note', title: 'Nota Médica', description: 'Formato SOAP del paciente', icon: FiFileText, color: '#2563eb', accent: '#eff6ff' },
+    { id: 'diagnosis', title: 'Diagnóstico', description: 'Diagnóstico actual e historial', icon: FiFileText, color: '#16a34a', accent: '#f0fdf4' },
+    { id: 'prescription', title: 'Receta Médica', description: 'Prescripción más reciente', icon: MdMedication, color: '#ea580c', accent: '#fff7ed' },
+    { id: 'lab-exams', title: 'Exámenes de Laboratorio', description: 'Última solicitud de laboratorio', icon: FiFileText, color: '#0ea5e9', accent: '#f0f9ff' },
+    { id: 'imaging-exams', title: 'Exámenes de Gabinete', description: 'Última solicitud de gabinete', icon: MdOutlineScreenshotMonitor, color: '#7c3aed', accent: '#faf5ff' },
+  ];
+
+  return (
+    <div style={styles.page}>
+      <div style={styles.header}>
+        <button type="button" onClick={() => navigate(-1)} style={styles.headerButton}><FiArrowLeft size={20} /></button>
+        <div>
+          <div style={styles.headerEyebrow}>MÉDICO</div>
+          <h1 style={styles.headerTitle}>Imprimir Documentos</h1>
+        </div>
+        <div style={styles.headerSpacer} />
+      </div>
+
+      <section style={styles.patientCard}>
+        <div style={styles.patientAvatar}><FiUser size={30} color="#fff" /></div>
+        <div>
+          <h2 style={styles.patientName}>{getPatientName(patientInfo)}</h2>
+          <p style={styles.patientMeta}>{patientLabel}</p>
+        </div>
+      </section>
+
+      {loading ? <div style={styles.loadingCard}>Cargando información del paciente...</div> : errorMessage ? <div style={styles.errorCard}>{errorMessage}</div> : (
+        <section style={styles.mainCard}>
+          <div style={styles.cardHeader}><FiPrinter size={20} /><strong>Selecciona el documento a imprimir</strong></div>
+          <div style={styles.cardBody}>
+            <div style={styles.grid}>
+              {printItems.map((item) => {
+                const Icon = item.icon;
+                const isBusy = loadingDoc === item.id;
+                return (
+                  <button key={item.id} type="button" style={{ ...styles.printCard, backgroundColor: item.accent }} onClick={() => handlePrint(item.id)} disabled={Boolean(loadingDoc)}>
+                    <div style={{ ...styles.printIcon, backgroundColor: item.color }}><Icon size={22} color="#fff" /></div>
+                    <div style={styles.printContent}>
+                      <strong style={{ ...styles.printTitle, color: item.color }}>{item.title}</strong>
+                      <span style={styles.printDescription}>{item.description}</span>
+                    </div>
+                    <span style={{ ...styles.printAction, color: item.color }}>{isBusy ? 'Preparando...' : 'Imprimir'}</span>
+                  </button>
+                );
+              })}
+            </div>
+            <div style={styles.noteBox}>Los documentos se abrirán en una nueva pestaña como PDF listos para impresión.</div>
+          </div>
+        </section>
+      )}
+
+      <footer style={styles.footer}><FiShield size={14} /><span>INEO v2.0 - Impresión de documentos</span></footer>
+    </div>
+  );
+}
+
+const styles = {
+  page: { minHeight: '100%', padding: '24px', background: 'linear-gradient(180deg, #eef2ff 0%, #e0e7ff 100%)' },
+  header: { display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: '16px', padding: '20px 24px', borderRadius: '22px', background: 'linear-gradient(135deg, #4f46e5 0%, #4338ca 100%)', color: '#fff', boxShadow: '0 18px 50px rgba(79, 70, 229, 0.22)' },
+  headerButton: { width: '44px', height: '44px', border: '1px solid rgba(255,255,255,0.24)', borderRadius: '12px', background: 'rgba(255,255,255,0.12)', color: '#fff', display: 'grid', placeItems: 'center' },
+  headerEyebrow: { fontSize: '12px', textTransform: 'uppercase', letterSpacing: '0.18em', opacity: 0.8, marginBottom: '4px' },
+  headerTitle: { margin: 0, fontSize: '28px', fontWeight: 800 },
+  headerSpacer: { width: '44px', height: '44px' },
+  patientCard: { marginTop: '20px', padding: '18px 20px', borderRadius: '20px', backgroundColor: '#fff', display: 'flex', alignItems: 'center', gap: '16px', boxShadow: '0 12px 32px rgba(15, 23, 42, 0.08)', borderLeft: '5px solid #4f46e5' },
+  patientAvatar: { width: '56px', height: '56px', borderRadius: '16px', backgroundColor: '#4f46e5', display: 'grid', placeItems: 'center' },
+  patientName: { margin: 0, color: '#0f172a', fontSize: '18px' },
+  patientMeta: { margin: '6px 0 0', color: '#64748b' },
+  loadingCard: { marginTop: '18px', padding: '30px', borderRadius: '20px', backgroundColor: '#fff', textAlign: 'center', boxShadow: '0 14px 36px rgba(15, 23, 42, 0.08)' },
+  errorCard: { marginTop: '18px', padding: '16px', borderRadius: '16px', backgroundColor: '#fff7ed', border: '1px solid #fdba74', color: '#9a3412' },
+  mainCard: { marginTop: '18px', borderRadius: '24px', overflow: 'hidden', backgroundColor: '#fff', boxShadow: '0 14px 36px rgba(15, 23, 42, 0.08)' },
+  cardHeader: { display: 'flex', alignItems: 'center', gap: '10px', padding: '18px 22px', background: 'linear-gradient(135deg, #4f46e5 0%, #4338ca 100%)', color: '#fff' },
+  cardBody: { padding: '20px' },
+  grid: { display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(240px, 1fr))', gap: '14px' },
+  printCard: { display: 'flex', alignItems: 'center', gap: '14px', padding: '18px', borderRadius: '18px', border: '1px solid #e2e8f0', textAlign: 'left' },
+  printIcon: { width: '48px', height: '48px', borderRadius: '14px', display: 'grid', placeItems: 'center', flexShrink: 0 },
+  printContent: { flex: 1, minWidth: 0 },
+  printTitle: { display: 'block', marginBottom: '6px' },
+  printDescription: { color: '#475569', fontSize: '14px', lineHeight: 1.4 },
+  printAction: { fontWeight: 700, fontSize: '13px' },
+  noteBox: { marginTop: '18px', padding: '16px', borderRadius: '16px', backgroundColor: '#eef2ff', color: '#312e81' },
+  footer: { marginTop: '26px', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '8px', color: '#312e81', fontSize: '13px' },
+};
