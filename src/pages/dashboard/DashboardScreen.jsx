@@ -60,7 +60,7 @@ export default function DashboardScreen() {
 
   const getMenuOptions = () => {
     const role = user?.role?.toLowerCase();
-    const studies = { name: 'Estudios', icon: 'flask-outline', path: '/estudios', color: '#ed8936', description: 'Gestión de exámenes', badge: pendingStudies.total };
+    const studies = { name: 'Estudios', icon: 'flask-outline', path: '../estudios/', color: '#ed8936', description: 'Gestión de exámenes', badge: pendingStudies.total };
 
     if (role === 'admin' || role === 'administrativo') return [
       { name: 'Administrativo', icon: 'business-outline', path: '/admin',      color: '#667eea', description: 'Gestión de pacientes y cuentas' },

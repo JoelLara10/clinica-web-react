@@ -21,7 +21,15 @@ import PrintDocsScreen from '../pages/medico/PrintDocsScreen';
 import StudyResultsScreen from '../pages/medico/StudyResultsScreen';
 import VitalSignsListScreen from '../pages/medico/VitalSignsListScreen';
 
-// Placeholder - irás reemplazando con los componentes reales
+
+import EstudiosScreen from '../pages/estudios/EstudiosScreen';
+import SubirResultadoScreen from '../pages/estudios/SubirResultadoScreen';
+import VerResultadoLabScreen from '../pages/estudios/VerResultadoLabScreen';
+import VerResultadoGabScreen from '../pages/estudios/VerResultadoGabScreen';
+import EditarResultadoLabScreen from '../pages/estudios/EditarResultadoLabScreen';
+import EditarResultadoGabScreen from '../pages/estudios/EditarResultadoGabScreen';
+
+
 const Placeholder = ({ name }) => (
   <div style={{ padding: 32, fontSize: 24 }}>{name} — en construcción</div>
 );
@@ -101,14 +109,28 @@ export default function AppRouter() {
                   <Route path="/enfermeria/medicamentos"     element={<EnfermeriaMedicationsScreen />} />
                 </>}
 
-                {/* Estudios */}
+                {/* ESTUDIOS - ACTUALIZADO CON COMPONENTES REALES */}
                 {(isAdmin || isMedico || isEstudios) && <>
-                  <Route path="/estudios"                    element={<Placeholder name="Panel Estudios" />} />
-                  <Route path="/estudios/subir-resultado"    element={<Placeholder name="Subir Resultado" />} />
-                  <Route path="/estudios/ver-lab"            element={<Placeholder name="Ver Resultado Lab" />} />
-                  <Route path="/estudios/ver-gab"            element={<Placeholder name="Ver Resultado Gab" />} />
-                  <Route path="/estudios/editar-lab"         element={<Placeholder name="Editar Lab" />} />
-                  <Route path="/estudios/editar-gab"         element={<Placeholder name="Editar Gab" />} />
+                  {/* Ruta principal de estudios */}
+                  <Route path="/estudios" element={<EstudiosScreen />} />
+                  <Route path="/subir-resultado" element={<SubirResultadoScreen />} />
+                  
+                  {/* Rutas con parámetros para las diferentes vistas */}
+                  <Route path="/estudios?initialSection=:section" element={<EstudiosScreen />} />
+                  
+                  {/* Rutas específicas para acciones de estudios */}
+                  
+                  <Route path="/ver-resultado-lab" element={<VerResultadoLabScreen />} />
+                  <Route path="/ver-resultado-gab" element={<VerResultadoGabScreen />} /> 
+                  
+                  <Route path="/editar-resultado-lab" element={<EditarResultadoLabScreen />} />
+                  <Route path="/editar-resultado-gab" element={<EditarResultadoGabScreen />} />
+                  
+                  {/* También mantenemos las rutas /estudios/* por si acaso */}
+                  <Route path="/estudios/subir-resultado" element={<Placeholder name="Subir Resultado" />} />
+                  <Route path="/estudios/ver-lab" element={<Placeholder name="Ver Resultado Lab" />} />
+                  <Route path="/estudios/ver-gab" element={<Placeholder name="Ver Resultado Gab" />} />
+                  
                 </>}
 
                 {/* Config — solo admin */}
