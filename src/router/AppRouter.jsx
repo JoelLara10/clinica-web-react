@@ -1,13 +1,19 @@
 import { Routes, Route, Navigate } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
+
 import LoginScreen from '../pages/auth/LoginScreen';
 import MainLayout from '../components/layout/MainLayout';
+
 import DashboardScreen from '../pages/dashboard/DashboardScreen';
+
+// Enfermería
 import EnfermeriaScreen from '../pages/enfermeria/EnfermeriaScreen';
 import PatientDetailScreen from '../pages/enfermeria/PatientDetailScreen';
 import EnfermeriaVitalSignsScreen from '../pages/enfermeria/EnfermeriaVitalSignsScreen';
 import EnfermeriaNoteScreen from '../pages/enfermeria/EnfermeriaNoteScreen';
 import EnfermeriaMedicationsScreen from '../pages/enfermeria/EnfermeriaMedicationsScreen';
+
+// Médico
 import MedicoScreen from '../pages/medico/MedicoScreen';
 import MedicoPatientDetailScreen from '../pages/medico/PatientDetailScreen';
 import VitalSignsScreen from '../pages/medico/VitalSignsScreen';
@@ -21,7 +27,7 @@ import PrintDocsScreen from '../pages/medico/PrintDocsScreen';
 import StudyResultsScreen from '../pages/medico/StudyResultsScreen';
 import VitalSignsListScreen from '../pages/medico/VitalSignsListScreen';
 
-
+// Estudios
 import EstudiosScreen from '../pages/estudios/EstudiosScreen';
 import SubirResultadoScreen from '../pages/estudios/SubirResultadoScreen';
 import VerResultadoLabScreen from '../pages/estudios/VerResultadoLabScreen';
@@ -29,32 +35,50 @@ import VerResultadoGabScreen from '../pages/estudios/VerResultadoGabScreen';
 import EditarResultadoLabScreen from '../pages/estudios/EditarResultadoLabScreen';
 import EditarResultadoGabScreen from '../pages/estudios/EditarResultadoGabScreen';
 
+// Configuración
+import ConfigScreen from '../pages/config/ConfigScreen';
+import GeneralSettingsScreen from '../pages/config/GeneralSettingsScreen';
+import UsuariosConfigScreen from '../pages/config/UsuariosConfigScreen';
+import CamasConfigScreen from '../pages/config/CamasConfigScreen';
+import ServiciosConfigScreen from '../pages/config/ServiciosConfigScreen';
+import AutomationConfigScreen from '../pages/config/AutomationConfigScreen';
+import BackupConfigScreen from '../pages/config/BackupConfigScreen';
+import ProfileConfigScreen from '../pages/config/ProfileConfigScreen';
 
 const Placeholder = ({ name }) => (
-  <div style={{ padding: 32, fontSize: 24 }}>{name} — en construcción</div>
+  <div style={{ padding: 32, fontSize: 24 }}>
+    {name} — en construcción
+  </div>
 );
 
 const PrivateRoute = ({ children }) => {
   const { isAuthenticated, loading } = useAuth();
-  if (loading) return <div className="loading-screen">Cargando...</div>;
+
+  if (loading) {
+    return <div className="loading-screen">Cargando...</div>;
+  }
+
   return isAuthenticated ? children : <Navigate to="/login" replace />;
 };
 
 const PublicLoginRoute = () => {
   const { isAuthenticated, loading } = useAuth();
 
-  if (loading) return <div className="loading-screen">Cargando...</div>;
+  if (loading) {
+    return <div className="loading-screen">Cargando...</div>;
+  }
 
   return isAuthenticated ? <Navigate to="/" replace /> : <LoginScreen />;
 };
 
 export default function AppRouter() {
   const { user } = useAuth();
+
   const role = user?.role;
 
-  const isAdmin   = role === 'admin';
+  const isAdmin = role === 'admin';
   const isAdminOrAdministrativo = isAdmin || role === 'administrativo';
-  const isMedico  = role === 'medico';
+  const isMedico = role === 'medico';
   const isEnfermeria = role === 'enfermero' || role === 'enfermeria';
   const isEstudios = role === 'estudios';
 
@@ -68,82 +92,78 @@ export default function AppRouter() {
           <PrivateRoute>
             <MainLayout>
               <Routes>
-                {/* Dashboard */}
                 <Route path="/" element={<DashboardScreen />} />
 
-                {/* Admin / Administrativo */}
-                {isAdminOrAdministrativo && <>
-                  <Route path="/admin"           element={<Placeholder name="Admin" />} />
-                  <Route path="/pacientes"        element={<Placeholder name="Pacientes" />} />
-                  <Route path="/pacientes/:id"    element={<Placeholder name="Detalle Paciente" />} />
-                  <Route path="/nuevo-paciente"   element={<Placeholder name="Nuevo Paciente" />} />
-                  <Route path="/censo"            element={<Placeholder name="Censo" />} />
-                  <Route path="/corte-caja"       element={<Placeholder name="Corte Caja" />} />
-                  <Route path="/camas"            element={<Placeholder name="Camas" />} />
-                </>}
+                {isAdminOrAdministrativo && (
+                  <>
+                    <Route path="/admin" element={<Placeholder name="Admin" />} />
+                    <Route path="/pacientes" element={<Placeholder name="Pacientes" />} />
+                    <Route path="/pacientes/:id" element={<Placeholder name="Detalle Paciente" />} />
+                    <Route path="/nuevo-paciente" element={<Placeholder name="Nuevo Paciente" />} />
+                    <Route path="/censo" element={<Placeholder name="Censo" />} />
+                    <Route path="/corte-caja" element={<Placeholder name="Corte Caja" />} />
+                    <Route path="/camas" element={<Placeholder name="Camas" />} />
+                  </>
+                )}
 
-                {/* Médico */}
-                {(isAdmin || isMedico) && <>
-                  <Route path="/medico"                    element={<MedicoScreen />} />
-                  <Route path="/medico/paciente/:id"       element={<MedicoPatientDetailScreen />} />
-                  <Route path="/medico/paciente/:idAtencion/:idExp" element={<MedicoPatientDetailScreen />} />
-                  <Route path="/medico/historia-clinica"   element={<HistoriaClinicaScreen />} />
-                  <Route path="/medico/signos-vitales"     element={<VitalSignsScreen />} />
-                  <Route path="/medico/signos-vitales/historial" element={<VitalSignsListScreen />} />
-                  <Route path="/medico/nota-medica"        element={<MedicalNoteScreen />} />
-                  <Route path="/medico/diagnostico"        element={<DiagnosisScreen />} />
-                  <Route path="/medico/receta"             element={<PrescriptionScreen />} />
-                  <Route path="/medico/lab-exams"          element={<LabExamsScreen />} />
-                  <Route path="/medico/imaging-exams"      element={<ImagingExamsScreen />} />
-                  <Route path="/medico/imprimir"           element={<PrintDocsScreen />} />
-                  <Route path="/medico/resultados"         element={<StudyResultsScreen />} />
-                </>}
+                {(isAdmin || isMedico) && (
+                  <>
+                    <Route path="/medico" element={<MedicoScreen />} />
+                    <Route path="/medico/paciente/:id" element={<MedicoPatientDetailScreen />} />
+                    <Route path="/medico/paciente/:idAtencion/:idExp" element={<MedicoPatientDetailScreen />} />
+                    <Route path="/medico/historia-clinica" element={<HistoriaClinicaScreen />} />
+                    <Route path="/medico/signos-vitales" element={<VitalSignsScreen />} />
+                    <Route path="/medico/signos-vitales/historial" element={<VitalSignsListScreen />} />
+                    <Route path="/medico/nota-medica" element={<MedicalNoteScreen />} />
+                    <Route path="/medico/diagnostico" element={<DiagnosisScreen />} />
+                    <Route path="/medico/receta" element={<PrescriptionScreen />} />
+                    <Route path="/medico/lab-exams" element={<LabExamsScreen />} />
+                    <Route path="/medico/imaging-exams" element={<ImagingExamsScreen />} />
+                    <Route path="/medico/imprimir" element={<PrintDocsScreen />} />
+                    <Route path="/medico/resultados" element={<StudyResultsScreen />} />
+                  </>
+                )}
 
-                {/* Enfermería */}
-                {(isAdmin || isEnfermeria) && <>
-                  <Route path="/enfermeria"                  element={<EnfermeriaScreen />} />
-                  <Route path="/enfermeria/paciente/:id"     element={<PatientDetailScreen />} />
-                  <Route path="/enfermeria/paciente/:idAtencion/:idExp" element={<PatientDetailScreen />} />
-                  <Route path="/enfermeria/signos-vitales"   element={<EnfermeriaVitalSignsScreen />} />
-                  <Route path="/enfermeria/nota"             element={<EnfermeriaNoteScreen />} />
-                  <Route path="/enfermeria/medicamentos"     element={<EnfermeriaMedicationsScreen />} />
-                </>}
+                {(isAdmin || isEnfermeria) && (
+                  <>
+                    <Route path="/enfermeria" element={<EnfermeriaScreen />} />
+                    <Route path="/enfermeria/paciente/:id" element={<PatientDetailScreen />} />
+                    <Route path="/enfermeria/paciente/:idAtencion/:idExp" element={<PatientDetailScreen />} />
+                    <Route path="/enfermeria/signos-vitales" element={<EnfermeriaVitalSignsScreen />} />
+                    <Route path="/enfermeria/nota" element={<EnfermeriaNoteScreen />} />
+                    <Route path="/enfermeria/medicamentos" element={<EnfermeriaMedicationsScreen />} />
+                  </>
+                )}
 
-                {/* ESTUDIOS - ACTUALIZADO CON COMPONENTES REALES */}
-                {(isAdmin || isMedico || isEstudios) && <>
-                  {/* Ruta principal de estudios */}
-                  <Route path="/estudios" element={<EstudiosScreen />} />
-                  <Route path="/subir-resultado" element={<SubirResultadoScreen />} />
-                  
-                  {/* Rutas con parámetros para las diferentes vistas */}
-                  <Route path="/estudios?initialSection=:section" element={<EstudiosScreen />} />
-                  
-                  {/* Rutas específicas para acciones de estudios */}
-                  
-                  <Route path="/ver-resultado-lab" element={<VerResultadoLabScreen />} />
-                  <Route path="/ver-resultado-gab" element={<VerResultadoGabScreen />} /> 
-                  
-                  <Route path="/editar-resultado-lab" element={<EditarResultadoLabScreen />} />
-                  <Route path="/editar-resultado-gab" element={<EditarResultadoGabScreen />} />
-                  
-                  {/* También mantenemos las rutas /estudios/* por si acaso */}
-                  <Route path="/estudios/subir-resultado" element={<Placeholder name="Subir Resultado" />} />
-                  <Route path="/estudios/ver-lab" element={<Placeholder name="Ver Resultado Lab" />} />
-                  <Route path="/estudios/ver-gab" element={<Placeholder name="Ver Resultado Gab" />} />
-                  
-                </>}
+                {(isAdmin || isMedico || isEstudios) && (
+                  <>
+                    <Route path="/estudios" element={<EstudiosScreen />} />
+                    <Route path="/subir-resultado" element={<SubirResultadoScreen />} />
+                    <Route path="/ver-resultado-lab" element={<VerResultadoLabScreen />} />
+                    <Route path="/ver-resultado-gab" element={<VerResultadoGabScreen />} />
+                    <Route path="/editar-resultado-lab" element={<EditarResultadoLabScreen />} />
+                    <Route path="/editar-resultado-gab" element={<EditarResultadoGabScreen />} />
 
-                {/* Config — solo admin */}
-                {isAdmin && <>
-                  <Route path="/config"                element={<Placeholder name="Configuración" />} />
-                  <Route path="/config/general"        element={<Placeholder name="Config General" />} />
-                  <Route path="/config/usuarios"       element={<Placeholder name="Config Usuarios" />} />
-                  <Route path="/config/camas"          element={<Placeholder name="Config Camas" />} />
-                  <Route path="/config/servicios"      element={<Placeholder name="Config Servicios" />} />
-                  <Route path="/config/automatizacion" element={<Placeholder name="Config Automatización" />} />
-                  <Route path="/config/backup"         element={<Placeholder name="Config Backup" />} />
-                  <Route path="/config/perfil"         element={<Placeholder name="Config Perfil" />} />
-                </>}
+                    <Route path="/estudios/subir-resultado" element={<SubirResultadoScreen />} />
+                    <Route path="/estudios/ver-lab" element={<VerResultadoLabScreen />} />
+                    <Route path="/estudios/ver-gab" element={<VerResultadoGabScreen />} />
+                    <Route path="/estudios/editar-lab" element={<EditarResultadoLabScreen />} />
+                    <Route path="/estudios/editar-gab" element={<EditarResultadoGabScreen />} />
+                  </>
+                )}
+
+                {isAdmin && (
+                  <>
+                    <Route path="/config" element={<ConfigScreen />} />
+                    <Route path="/config/general" element={<GeneralSettingsScreen />} />
+                    <Route path="/config/usuarios" element={<UsuariosConfigScreen />} />
+                    <Route path="/config/camas" element={<CamasConfigScreen />} />
+                    <Route path="/config/servicios" element={<ServiciosConfigScreen />} />
+                    <Route path="/config/automatizacion" element={<AutomationConfigScreen />} />
+                    <Route path="/config/backup" element={<BackupConfigScreen />} />
+                    <Route path="/config/perfil" element={<ProfileConfigScreen />} />
+                  </>
+                )}
 
                 <Route path="*" element={<Navigate to="/" replace />} />
               </Routes>
