@@ -4,6 +4,7 @@ import {
   FiActivity,
   FiAlertCircle,
   FiArrowLeft,
+  FiDroplet,
   FiFileText,
   FiHeart,
   FiPhone,
@@ -176,6 +177,30 @@ export default function PatientDetailScreen() {
       color: '#16a34a',
       background: '#f0fdf4',
       path: '/enfermeria/medicamentos',
+    },
+    {
+      title: 'Valoración de Enfermería',
+      subtitle: 'Valoración inicial y seguimiento',
+      icon: FiActivity,
+      color: '#7c3aed',
+      background: '#f5f3ff',
+      path: '/enfermeria/valoracion',
+    },
+    {
+      title: 'Balance Hídrico',
+      subtitle: 'Control de ingresos y egresos',
+      icon: FiDroplet,
+      color: '#0284c7',
+      background: '#f0f9ff',
+      path: '/enfermeria/balance-hidrico',
+    },
+    {
+      title: 'Cuidados de Enfermería',
+      subtitle: 'Plan y evolución de cuidados',
+      icon: FiShield,
+      color: '#ea580c',
+      background: '#fff7ed',
+      path: '/enfermeria/cuidados',
     },
   ];
 

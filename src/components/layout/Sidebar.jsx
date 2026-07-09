@@ -120,6 +120,9 @@ export default function Sidebar({ isOpen, onClose }) {
         { name: 'Signos Vitales',              icon: 'heart-outline',         path: '/enfermeria/signos-vitales', requiresPatient: true },
         { name: 'Nota de Enfermería',          icon: 'document-text-outline', path: '/enfermeria/nota',           requiresPatient: true },
         { name: 'Administración Medicamentos', icon: 'medkit-outline',        path: '/enfermeria/medicamentos',   requiresPatient: true },
+        { name: 'Valoración de Enfermería',    icon: 'clipboard-outline',     path: '/enfermeria/valoracion',     requiresPatient: true },
+        { name: 'Balance Hídrico',             icon: 'water-outline',         path: '/enfermeria/balance-hidrico', requiresPatient: true },
+        { name: 'Cuidados de Enfermería',      icon: 'shield-checkmark-outline', path: '/enfermeria/cuidados',     requiresPatient: true },
       ],
     });
   }

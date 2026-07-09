@@ -1,6 +1,6 @@
 import { useEffect, useMemo, useState } from 'react';
 import { useLocation, useNavigate } from 'react-router-dom';
-import { FiArrowLeft, FiChevronDown, FiChevronUp, FiClock, FiSave, FiShield, FiUser } from 'react-icons/fi';
+import { FiArrowLeft, FiChevronDown, FiChevronUp, FiClock, FiRefreshCw, FiSave, FiShield, FiUser } from 'react-icons/fi';
 import { MdOutlineScreenshotMonitor } from 'react-icons/md';
 import { usePatient } from '../../context/PatientContext';
 import api from '../../services/api';
@@ -128,6 +128,29 @@ export default function ImagingExamsScreen() {
     }
   };
 
+  const reloadData = async () => {
+    if (!idAtencion) return;
+    setLoadingCatalog(true);
+    setLoadingHistory(true);
+    try {
+      const [catalogResponse, historyResponse] = await Promise.all([
+        api.get('/exams/catalog?type=GABINETE'),
+        api.get(`/exams/requested/${idAtencion}?type=GABINETE`),
+      ]);
+      const nextCatalog = Array.isArray(catalogResponse.data) ? catalogResponse.data : [];
+      const nextHistory = Array.isArray(historyResponse.data) ? historyResponse.data : [];
+      setCachedValue(CATALOG_CACHE, nextCatalog, CACHE_TTL);
+      setCachedValue(`${HISTORY_PREFIX}${idAtencion}`, nextHistory, HISTORY_TTL);
+      setExams(nextCatalog);
+      setHistory(nextHistory);
+    } catch (error) {
+      console.error('Error reloading imaging data:', error);
+    } finally {
+      setLoadingCatalog(false);
+      setLoadingHistory(false);
+    }
+  };
+
   const toggleExam = (examId) => {
     setSelectedExams((current) => (current.includes(examId) ? current.filter((id) => id !== examId) : [...current, examId]));
   };
@@ -166,7 +189,7 @@ export default function ImagingExamsScreen() {
           <div style={styles.headerEyebrow}>MÉDICO</div>
           <h1 style={styles.headerTitle}>Exámenes de Gabinete</h1>
         </div>
-        <div style={styles.headerSpacer} />
+        <button type="button" onClick={reloadData} style={styles.headerActionButton} disabled={!idAtencion || loadingCatalog || loadingHistory}><FiRefreshCw size={18} /></button>
       </div>
 
       <section style={styles.patientCard}>
@@ -245,6 +268,7 @@ const styles = {
   headerEyebrow: { fontSize: '12px', textTransform: 'uppercase', letterSpacing: '0.18em', opacity: 0.8, marginBottom: '4px' },
   headerTitle: { margin: 0, fontSize: '28px', fontWeight: 800 },
   headerSpacer: { width: '44px', height: '44px' },
+  headerActionButton: { width: '44px', height: '44px', border: '1px solid rgba(255,255,255,0.24)', borderRadius: '12px', background: 'rgba(255,255,255,0.12)', color: '#fff', display: 'grid', placeItems: 'center' },
   patientCard: { marginTop: '20px', padding: '18px 20px', borderRadius: '20px', backgroundColor: '#fff', display: 'flex', alignItems: 'center', gap: '16px', borderLeft: '5px solid #d97706' },
   patientAvatar: { width: '56px', height: '56px', borderRadius: '16px', backgroundColor: '#d97706', display: 'grid', placeItems: 'center' },
   patientName: { margin: 0, color: '#0f172a', fontSize: '18px' },

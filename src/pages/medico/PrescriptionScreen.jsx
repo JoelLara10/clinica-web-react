@@ -1,6 +1,6 @@
 import { useEffect, useMemo, useState } from 'react';
 import { useLocation, useNavigate } from 'react-router-dom';
-import { FiArrowLeft, FiChevronDown, FiChevronUp, FiClock, FiPlus, FiSave, FiShield, FiTrash2, FiUser } from 'react-icons/fi';
+import { FiArrowLeft, FiChevronDown, FiChevronUp, FiClock, FiPlus, FiRefreshCw, FiSave, FiShield, FiTrash2, FiUser } from 'react-icons/fi';
 import { MdMedication } from 'react-icons/md';
 import { usePatient } from '../../context/PatientContext';
 import api from '../../services/api';
@@ -159,7 +159,7 @@ export default function PrescriptionScreen() {
           <div style={styles.headerEyebrow}>MÉDICO</div>
           <h1 style={styles.headerTitle}>Receta Médica</h1>
         </div>
-        <div style={styles.headerSpacer} />
+        <button type="button" onClick={reloadHistory} style={styles.headerActionButton} disabled={!idAtencion || loadingHistory}><FiRefreshCw size={18} /></button>
       </div>
 
       <section style={styles.patientCard}>
@@ -267,6 +267,7 @@ const styles = {
   headerEyebrow: { fontSize: '12px', textTransform: 'uppercase', letterSpacing: '0.18em', opacity: 0.8, marginBottom: '4px' },
   headerTitle: { margin: 0, fontSize: '28px', fontWeight: 800 },
   headerSpacer: { width: '44px', height: '44px' },
+  headerActionButton: { width: '44px', height: '44px', border: '1px solid rgba(255,255,255,0.24)', borderRadius: '12px', background: 'rgba(255,255,255,0.12)', color: '#fff', display: 'grid', placeItems: 'center' },
   patientCard: { marginTop: '20px', padding: '18px 20px', borderRadius: '20px', backgroundColor: '#fff', display: 'flex', alignItems: 'center', gap: '16px', boxShadow: '0 12px 32px rgba(15, 23, 42, 0.08)', borderLeft: '5px solid #f97316' },
   patientAvatar: { width: '56px', height: '56px', borderRadius: '16px', backgroundColor: '#f97316', display: 'grid', placeItems: 'center' },
   patientName: { margin: 0, color: '#0f172a', fontSize: '18px' },

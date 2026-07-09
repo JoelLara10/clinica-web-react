@@ -49,9 +49,19 @@ export default function PrintDocsScreen() {
   }, [idAtencion, idExp]);
 
   const openPdfUrl = (path) => {
-    const baseUrl = api.defaults.baseURL || '';
-    const url = `${baseUrl.replace('/api/v1', '')}${path}`;
+    const token = typeof window !== 'undefined' ? window.localStorage.getItem('@ineo_token') : '';
+    if (!token) {
+      window.alert('No se encontró sesión activa.');
+      return false;
+    }
+    const baseUrl = (api.defaults.baseURL || '').replace(/\/$/, '');
+    const query = new URLSearchParams({
+      token,
+      id_atencion: String(idAtencion),
+    }).toString();
+    const url = `${baseUrl}${path}?${query}`;
     window.open(url, '_blank', 'noopener,noreferrer');
+    return true;
   };
 
   const handlePrint = async (documentType) => {
@@ -64,41 +74,41 @@ export default function PrintDocsScreen() {
           const response = await api.get(`/appointments/${idAtencion}/vital-signs`);
           const lastItem = Array.isArray(response.data) ? response.data[0] : null;
           if (!lastItem?.id_signos) throw new Error('No hay signos vitales');
-          openPdfUrl(`/pdf/vital-signs/${lastItem.id_signos}`);
+          if (!openPdfUrl(`/pdf/vital-signs/${lastItem.id_signos}`)) return;
           break;
         }
         case 'medical-note': {
           const response = await api.get(`/appointments/${idAtencion}/medical-notes`);
           const lastItem = Array.isArray(response.data) ? response.data[0] : null;
           if (!lastItem?.id_nota) throw new Error('No hay notas médicas');
-          openPdfUrl(`/pdf/medical-note/${lastItem.id_nota}`);
+          if (!openPdfUrl(`/pdf/medical-note/${lastItem.id_nota}`)) return;
           break;
         }
         case 'diagnosis': {
           const response = await api.get(`/appointments/${idAtencion}/diagnosis`);
           if (!response.data?.id_diagnostico) throw new Error('No hay diagnóstico');
-          openPdfUrl(`/pdf/diagnosis/${response.data.id_diagnostico}`);
+          if (!openPdfUrl(`/pdf/diagnosis/${response.data.id_diagnostico}`)) return;
           break;
         }
         case 'prescription': {
           const response = await api.get(`/appointments/${idAtencion}/prescriptions`);
           const lastItem = Array.isArray(response.data) ? response.data[0] : null;
           if (!lastItem?.id_receta) throw new Error('No hay recetas');
-          openPdfUrl(`/pdf/prescription/${lastItem.id_receta}`);
+          if (!openPdfUrl(`/pdf/prescription/${lastItem.id_receta}`)) return;
           break;
         }
         case 'lab-exams': {
           const response = await api.get(`/exams/requested/${idAtencion}?type=LABORATORIO`);
           const lastItem = Array.isArray(response.data) ? response.data[0] : null;
           if (!lastItem?.id_examen) throw new Error('No hay exámenes de laboratorio');
-          openPdfUrl(`/pdf/lab/${lastItem.id_examen}`);
+          if (!openPdfUrl(`/pdf/lab/${lastItem.id_examen}`)) return;
           break;
         }
         case 'imaging-exams': {
           const response = await api.get(`/exams/requested/${idAtencion}?type=GABINETE`);
           const lastItem = Array.isArray(response.data) ? response.data[0] : null;
           if (!lastItem?.id_examen) throw new Error('No hay exámenes de gabinete');
-          openPdfUrl(`/pdf/imaging/${lastItem.id_examen}`);
+          if (!openPdfUrl(`/pdf/imaging/${lastItem.id_examen}`)) return;
           break;
         }
         default:

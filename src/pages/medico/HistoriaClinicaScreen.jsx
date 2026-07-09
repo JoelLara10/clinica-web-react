@@ -1,6 +1,6 @@
 import { useEffect, useMemo, useState } from 'react';
 import { useLocation, useNavigate } from 'react-router-dom';
-import { FiArrowLeft, FiCheckCircle, FiClipboard, FiSave, FiShield, FiUser } from 'react-icons/fi';
+import { FiArrowLeft, FiCheckCircle, FiClipboard, FiRefreshCw, FiSave, FiShield, FiUser } from 'react-icons/fi';
 import { usePatient } from '../../context/PatientContext';
 import api from '../../services/api';
 
@@ -125,6 +125,37 @@ export default function HistoriaClinicaScreen() {
         heredo: formData.heredo.join(','),
         nopat: formData.nopat.join(','),
       };
+
+      const reloadData = async () => {
+        if (!idAtencion || !idExp) return;
+        setLoadingData(true);
+        try {
+          const response = await api.get(`/historia-clinica/${idAtencion}/${idExp}`);
+          if (response.data && Object.keys(response.data).length > 0) {
+            const data = response.data;
+            const parsedData = {
+              motivo_consulta: data.motivo_consulta || '',
+              sintomatologia: data.sintomatologia ? data.sintomatologia.split(',') : [],
+              sintomatologia_otros: data.sintomatologia_otros || '',
+              heredo: data.heredo ? data.heredo.split(',') : [],
+              heredo_otros: data.heredo_otros || '',
+              nopat: data.nopat ? data.nopat.split(',') : [],
+              nopat_otros: data.nopat_otros || '',
+              pat_enfermedades: data.pat_enfermedades || '',
+              pat_medicamentos: data.pat_medicamentos || '',
+              pat_alergias: data.pat_alergias || '',
+              pat_oculares: data.pat_oculares || '',
+              pat_cirugias: data.pat_cirugias || '',
+            };
+            setCachedValue(`${idAtencion}_${idExp}`, parsedData);
+            setFormData(parsedData);
+          }
+        } catch (error) {
+          console.error('Error reloading historia clinica:', error);
+        } finally {
+          setLoadingData(false);
+        }
+      };
       const response = await api.post(`/historia-clinica/${idAtencion}/${idExp}`, dataToSend);
       if (response.data) {
         setCachedValue(`${idAtencion}_${idExp}`, formData);
@@ -164,7 +195,7 @@ export default function HistoriaClinicaScreen() {
           <div style={styles.headerEyebrow}>MÉDICO</div>
           <h1 style={styles.headerTitle}>Historia Clínica</h1>
         </div>
-        <div style={styles.headerSpacer} />
+        <button type="button" onClick={reloadData} style={styles.headerActionButton} disabled={!idAtencion || !idExp || loadingData}><FiRefreshCw size={18} /></button>
       </div>
 
       {errorMessage ? <div style={styles.errorCard}>{errorMessage}</div> : null}
@@ -205,6 +236,7 @@ const styles = {
   headerEyebrow: { fontSize: '12px', letterSpacing: '0.18em', textTransform: 'uppercase', opacity: 0.8, marginBottom: '4px' },
   headerTitle: { margin: 0, fontSize: '28px', fontWeight: 800 },
   headerSpacer: { width: '44px', height: '44px' },
+  headerActionButton: { width: '44px', height: '44px', border: '1px solid rgba(255,255,255,0.25)', borderRadius: '12px', background: 'rgba(255,255,255,0.12)', color: '#fff', display: 'grid', placeItems: 'center' },
   errorCard: { marginTop: '18px', padding: '16px', borderRadius: '16px', backgroundColor: '#fff7ed', border: '1px solid #fdba74', color: '#9a3412' },
   loadingCard: { marginTop: '20px', padding: '32px', textAlign: 'center', backgroundColor: '#fff', borderRadius: '20px', boxShadow: '0 12px 32px rgba(15, 23, 42, 0.08)' },
   mainCard: { marginTop: '18px', backgroundColor: '#fff', borderRadius: '24px', overflow: 'hidden', boxShadow: '0 14px 36px rgba(15, 23, 42, 0.08)' },

@@ -1,6 +1,6 @@
 import { useEffect, useMemo, useState } from 'react';
 import { useLocation, useNavigate } from 'react-router-dom';
-import { FiActivity, FiArrowLeft, FiHeart, FiSave, FiShield, FiUser } from 'react-icons/fi';
+import { FiActivity, FiArrowLeft, FiHeart, FiRefreshCw, FiSave, FiShield, FiUser } from 'react-icons/fi';
 import { usePatient } from '../../context/PatientContext';
 import api from '../../services/api';
 import moment from 'moment';
@@ -90,6 +90,21 @@ export default function VitalSignsScreen() {
     loadHistory();
   }, [idAtencion]);
 
+  const reloadHistory = async () => {
+    if (!idAtencion) return;
+    setLoadingHistory(true);
+    try {
+      const response = await api.get(`/appointments/${idAtencion}/vital-signs`);
+      const nextHistory = response.data || [];
+      setCachedValue(String(idAtencion), nextHistory);
+      setHistory(nextHistory);
+    } catch (error) {
+      console.error('Error reloading medico vital signs history:', error);
+    } finally {
+      setLoadingHistory(false);
+    }
+  };
+
   const handleSubmit = async () => {
     const hasData = Object.values(formData).some((value) => value !== '');
     if (!hasData) {
@@ -144,7 +159,7 @@ export default function VitalSignsScreen() {
       <div style={styles.header}>
         <button type="button" onClick={() => navigate(-1)} style={styles.headerButton}><FiArrowLeft size={20} /></button>
         <div><div style={styles.headerEyebrow}>MÉDICO</div><h1 style={styles.headerTitle}>Signos Vitales</h1></div>
-        <div style={styles.headerSpacer} />
+        <button type="button" onClick={reloadHistory} style={styles.headerActionButton} disabled={!idAtencion || loadingHistory}><FiRefreshCw size={18} /></button>
       </div>
 
       <section style={styles.patientCard}>
@@ -208,6 +223,7 @@ const styles = {
   headerEyebrow: { fontSize: '12px', letterSpacing: '0.18em', textTransform: 'uppercase', opacity: 0.8, marginBottom: '4px' },
   headerTitle: { margin: 0, fontSize: '28px', fontWeight: 800 },
   headerSpacer: { width: '44px', height: '44px' },
+  headerActionButton: { width: '44px', height: '44px', border: '1px solid rgba(255,255,255,0.25)', borderRadius: '12px', background: 'rgba(255,255,255,0.12)', color: '#fff', display: 'grid', placeItems: 'center' },
   patientCard: { marginTop: '20px', padding: '18px 20px', backgroundColor: '#fff', borderRadius: '20px', display: 'flex', alignItems: 'center', gap: '16px', boxShadow: '0 12px 32px rgba(15, 23, 42, 0.08)', borderLeft: '5px solid #ef4444' },
   patientAvatar: { width: '56px', height: '56px', borderRadius: '16px', backgroundColor: '#ef4444', display: 'grid', placeItems: 'center', flexShrink: 0 },
   patientName: { margin: 0, fontSize: '18px', color: '#0f172a' },

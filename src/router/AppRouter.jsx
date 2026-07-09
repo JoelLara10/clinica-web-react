@@ -12,8 +12,6 @@ import PatientDetailScreen from '../pages/enfermeria/PatientDetailScreen';
 import EnfermeriaVitalSignsScreen from '../pages/enfermeria/EnfermeriaVitalSignsScreen';
 import EnfermeriaNoteScreen from '../pages/enfermeria/EnfermeriaNoteScreen';
 import EnfermeriaMedicationsScreen from '../pages/enfermeria/EnfermeriaMedicationsScreen';
-
-// Médico
 import MedicoScreen from '../pages/medico/MedicoScreen';
 import MedicoPatientDetailScreen from '../pages/medico/PatientDetailScreen';
 import VitalSignsScreen from '../pages/medico/VitalSignsScreen';
@@ -94,76 +92,73 @@ export default function AppRouter() {
               <Routes>
                 <Route path="/" element={<DashboardScreen />} />
 
-                {isAdminOrAdministrativo && (
-                  <>
-                    <Route path="/admin" element={<Placeholder name="Admin" />} />
-                    <Route path="/pacientes" element={<Placeholder name="Pacientes" />} />
-                    <Route path="/pacientes/:id" element={<Placeholder name="Detalle Paciente" />} />
-                    <Route path="/nuevo-paciente" element={<Placeholder name="Nuevo Paciente" />} />
-                    <Route path="/censo" element={<Placeholder name="Censo" />} />
-                    <Route path="/corte-caja" element={<Placeholder name="Corte Caja" />} />
-                    <Route path="/camas" element={<Placeholder name="Camas" />} />
-                  </>
-                )}
+                {/* Admin / Administrativo */}
+                {isAdminOrAdministrativo && <>
+                  <Route path="admin"           element={<Placeholder name="Admin" />} />
+                  <Route path="pacientes"        element={<Placeholder name="Pacientes" />} />
+                  <Route path="pacientes/:id"    element={<Placeholder name="Detalle Paciente" />} />
+                  <Route path="nuevo-paciente"   element={<Placeholder name="Nuevo Paciente" />} />
+                  <Route path="censo"            element={<Placeholder name="Censo" />} />
+                  <Route path="corte-caja"       element={<Placeholder name="Corte Caja" />} />
+                  <Route path="camas"            element={<Placeholder name="Camas" />} />
+                </>}
 
-                {(isAdmin || isMedico) && (
-                  <>
-                    <Route path="/medico" element={<MedicoScreen />} />
-                    <Route path="/medico/paciente/:id" element={<MedicoPatientDetailScreen />} />
-                    <Route path="/medico/paciente/:idAtencion/:idExp" element={<MedicoPatientDetailScreen />} />
-                    <Route path="/medico/historia-clinica" element={<HistoriaClinicaScreen />} />
-                    <Route path="/medico/signos-vitales" element={<VitalSignsScreen />} />
-                    <Route path="/medico/signos-vitales/historial" element={<VitalSignsListScreen />} />
-                    <Route path="/medico/nota-medica" element={<MedicalNoteScreen />} />
-                    <Route path="/medico/diagnostico" element={<DiagnosisScreen />} />
-                    <Route path="/medico/receta" element={<PrescriptionScreen />} />
-                    <Route path="/medico/lab-exams" element={<LabExamsScreen />} />
-                    <Route path="/medico/imaging-exams" element={<ImagingExamsScreen />} />
-                    <Route path="/medico/imprimir" element={<PrintDocsScreen />} />
-                    <Route path="/medico/resultados" element={<StudyResultsScreen />} />
-                  </>
-                )}
+                {/* Médico */}
+                {(isAdmin || isMedico) && <>
+                  <Route path="medico"                    element={<MedicoScreen />} />
+                  <Route path="medico/paciente/:id"       element={<MedicoPatientDetailScreen />} />
+                  <Route path="medico/paciente/:idAtencion/:idExp" element={<MedicoPatientDetailScreen />} />
+                  <Route path="medico/historia-clinica"   element={<HistoriaClinicaScreen />} />
+                  <Route path="medico/signos-vitales"     element={<VitalSignsScreen />} />
+                  <Route path="medico/signos-vitales/historial" element={<VitalSignsListScreen />} />
+                  <Route path="medico/nota-medica"        element={<MedicalNoteScreen />} />
+                  <Route path="medico/diagnostico"        element={<DiagnosisScreen />} />
+                  <Route path="medico/receta"             element={<PrescriptionScreen />} />
+                  <Route path="medico/lab-exams"          element={<LabExamsScreen />} />
+                  <Route path="medico/imaging-exams"      element={<ImagingExamsScreen />} />
+                  <Route path="medico/imprimir"           element={<PrintDocsScreen />} />
+                  <Route path="medico/resultados"         element={<StudyResultsScreen />} />
+                </>}
 
-                {(isAdmin || isEnfermeria) && (
-                  <>
-                    <Route path="/enfermeria" element={<EnfermeriaScreen />} />
-                    <Route path="/enfermeria/paciente/:id" element={<PatientDetailScreen />} />
-                    <Route path="/enfermeria/paciente/:idAtencion/:idExp" element={<PatientDetailScreen />} />
-                    <Route path="/enfermeria/signos-vitales" element={<EnfermeriaVitalSignsScreen />} />
-                    <Route path="/enfermeria/nota" element={<EnfermeriaNoteScreen />} />
-                    <Route path="/enfermeria/medicamentos" element={<EnfermeriaMedicationsScreen />} />
-                  </>
-                )}
+                {/* Enfermería */}
+                {(isAdmin || isEnfermeria) && <>
+                  <Route path="enfermeria"                  element={<EnfermeriaScreen />} />
+                  <Route path="enfermeria/paciente/:id"     element={<PatientDetailScreen />} />
+                  <Route path="enfermeria/paciente/:idAtencion/:idExp" element={<PatientDetailScreen />} />
+                  <Route path="enfermeria/signos-vitales"   element={<EnfermeriaVitalSignsScreen />} />
+                  <Route path="enfermeria/nota"             element={<EnfermeriaNoteScreen />} />
+                  <Route path="enfermeria/medicamentos"     element={<EnfermeriaMedicationsScreen />} />
+                </>}
 
+                {/* Estudios */}
                 {(isAdmin || isMedico || isEstudios) && (
                   <>
-                    <Route path="/estudios" element={<EstudiosScreen />} />
-                    <Route path="/subir-resultado" element={<SubirResultadoScreen />} />
-                    <Route path="/ver-resultado-lab" element={<VerResultadoLabScreen />} />
-                    <Route path="/ver-resultado-gab" element={<VerResultadoGabScreen />} />
-                    <Route path="/editar-resultado-lab" element={<EditarResultadoLabScreen />} />
-                    <Route path="/editar-resultado-gab" element={<EditarResultadoGabScreen />} />
+                    <Route path="estudios" element={<EstudiosScreen />} />
+                    <Route path="subir-resultado" element={<SubirResultadoScreen />} />
+                    <Route path="ver-resultado-lab" element={<VerResultadoLabScreen />} />
+                    <Route path="ver-resultado-gab" element={<VerResultadoGabScreen />} />
+                    <Route path="editar-resultado-lab" element={<EditarResultadoLabScreen />} />
+                    <Route path="editar-resultado-gab" element={<EditarResultadoGabScreen />} />
 
-                    <Route path="/estudios/subir-resultado" element={<SubirResultadoScreen />} />
-                    <Route path="/estudios/ver-lab" element={<VerResultadoLabScreen />} />
-                    <Route path="/estudios/ver-gab" element={<VerResultadoGabScreen />} />
-                    <Route path="/estudios/editar-lab" element={<EditarResultadoLabScreen />} />
-                    <Route path="/estudios/editar-gab" element={<EditarResultadoGabScreen />} />
+                    <Route path="estudios/subir-resultado" element={<SubirResultadoScreen />} />
+                    <Route path="estudios/ver-lab" element={<VerResultadoLabScreen />} />
+                    <Route path="estudios/ver-gab" element={<VerResultadoGabScreen />} />
+                    <Route path="estudios/editar-lab" element={<EditarResultadoLabScreen />} />
+                    <Route path="estudios/editar-gab" element={<EditarResultadoGabScreen />} />
                   </>
                 )}
 
-                {isAdmin && (
-                  <>
-                    <Route path="/config" element={<ConfigScreen />} />
-                    <Route path="/config/general" element={<GeneralSettingsScreen />} />
-                    <Route path="/config/usuarios" element={<UsuariosConfigScreen />} />
-                    <Route path="/config/camas" element={<CamasConfigScreen />} />
-                    <Route path="/config/servicios" element={<ServiciosConfigScreen />} />
-                    <Route path="/config/automatizacion" element={<AutomationConfigScreen />} />
-                    <Route path="/config/backup" element={<BackupConfigScreen />} />
-                    <Route path="/config/perfil" element={<ProfileConfigScreen />} />
-                  </>
-                )}
+                {/* Config — solo admin */}
+                {isAdmin && <>
+                  <Route path="config"                element={<ConfigScreen />} />
+                  <Route path="config/general"        element={<GeneralSettingsScreen />} />
+                  <Route path="config/usuarios"       element={<UsuariosConfigScreen />} />
+                  <Route path="config/camas"          element={<CamasConfigScreen />} />
+                  <Route path="config/servicios"      element={<ServiciosConfigScreen />} />
+                  <Route path="config/automatizacion" element={<AutomationConfigScreen />} />
+                  <Route path="config/backup"         element={<BackupConfigScreen />} />
+                  <Route path="config/perfil"         element={<ProfileConfigScreen />} />
+                </>}
 
                 <Route path="*" element={<Navigate to="/" replace />} />
               </Routes>
