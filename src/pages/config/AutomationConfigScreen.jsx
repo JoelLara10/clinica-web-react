@@ -1,45 +1,13 @@
-import { useEffect, useState } from 'react';
+import { useState } from 'react';
+import { FiSave } from 'react-icons/fi';
 import ConfigHeader from './ConfigHeader';
-import { getConfigSection, saveConfigSection } from '../../services/configService';
+import { readPermanent, savePermanent } from './configCache';
 import './ConfigStyles.css';
 
-export default function AutomationConfigScreen() {
-  const [form, setForm] = useState({ respaldosAutomaticos: true, horaRespaldo: '22:00', limpiarTemporales: true, diasRetencion: '30' });
-  const [msg, setMsg] = useState('');
+const defaults = { respaldosAutomaticos:true, horaRespaldo:'22:00', limpiarTemporales:true, diasRetencion:'30', notificaciones:true, rendimiento:true };
 
-  useEffect(() => { getConfigSection('automatizacion').then(setForm); }, []);
-
-  const save = async (e) => {
-    e.preventDefault();
-    await saveConfigSection('automatizacion', form);
-    setMsg('Automatización guardada en caché.');
-  };
-
-  return (
-    <main className="config-page">
-      <ConfigHeader title="Automatización" />
-      <section className="config-content">
-        <form className="config-card config-form" onSubmit={save}>
-          <div className="config-row">
-            <div><h3>Respaldos automáticos</h3><p>Permite programar respaldos diarios del sistema.</p></div>
-            <input className="config-switch" type="checkbox" checked={!!form.respaldosAutomaticos} onChange={(e) => setForm({ ...form, respaldosAutomaticos: e.target.checked })} />
-          </div>
-
-          <label className="config-label">Hora de respaldo</label>
-          <input className="config-input" type="time" value={form.horaRespaldo} onChange={(e) => setForm({ ...form, horaRespaldo: e.target.value })} />
-
-          <div className="config-row">
-            <div><h3>Limpieza de temporales</h3><p>Ayuda a mantener la aplicación ordenada.</p></div>
-            <input className="config-switch" type="checkbox" checked={!!form.limpiarTemporales} onChange={(e) => setForm({ ...form, limpiarTemporales: e.target.checked })} />
-          </div>
-
-          <label className="config-label">Días de retención</label>
-          <input className="config-input" type="number" value={form.diasRetencion} onChange={(e) => setForm({ ...form, diasRetencion: e.target.value })} />
-
-          <button className="config-btn primary" type="submit">Guardar automatización</button>
-          {msg && <p className="config-cache">{msg}</p>}
-        </form>
-      </section>
-    </main>
-  );
+export default function AutomationConfigScreen(){
+ const [form,setForm]=useState(()=>readPermanent('automatizacion',defaults)); const [msg,setMsg]=useState('');
+ const save=(e)=>{e.preventDefault();savePermanent('automatizacion',form);setMsg('Automatización guardada en caché.')};
+ return <main className="config-page"><ConfigHeader title="Automatización de tareas"/><section className="config-content"><form className="config-card config-main-card" onSubmit={save}><div className="config-card-header"><h2>⏱️ Automatización de tareas</h2></div><div className="config-card-body"><div className="config-section-box"><h3 className="config-subtitle">Respaldos automáticos</h3><label className="config-row"><span>Activar respaldos automáticos</span><input className="config-switch" type="checkbox" checked={form.respaldosAutomaticos} onChange={e=>setForm({...form,respaldosAutomaticos:e.target.checked})}/></label><label className="config-label">Hora del respaldo</label><input className="config-input" type="time" value={form.horaRespaldo} onChange={e=>setForm({...form,horaRespaldo:e.target.value})}/></div><div className="config-section-box"><h3 className="config-subtitle">Limpieza local</h3><label className="config-row"><span>Limpiar temporales automáticamente</span><input className="config-switch" type="checkbox" checked={form.limpiarTemporales} onChange={e=>setForm({...form,limpiarTemporales:e.target.checked})}/></label><label className="config-label">Días de retención</label><input className="config-input" type="number" value={form.diasRetencion} onChange={e=>setForm({...form,diasRetencion:e.target.value})}/></div><div className="config-section-box"><h3 className="config-subtitle">Sistema</h3><label className="config-row"><span>Notificaciones del sistema</span><input className="config-switch" type="checkbox" checked={form.notificaciones} onChange={e=>setForm({...form,notificaciones:e.target.checked})}/></label><label className="config-row"><span>Monitoreo de rendimiento</span><input className="config-switch" type="checkbox" checked={form.rendimiento} onChange={e=>setForm({...form,rendimiento:e.target.checked})}/></label></div><div className="config-form-footer"><button className="config-btn success" type="submit"><FiSave/>Guardar configuración</button></div>{msg&&<div className="config-alert success">{msg}</div>}</div></form></section></main>
 }

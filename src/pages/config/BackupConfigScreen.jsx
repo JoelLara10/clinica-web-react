@@ -1,57 +1,14 @@
-import { useEffect, useState } from 'react';
+import { useState } from 'react';
+import { FiDownload, FiRefreshCw, FiTrash2, FiUpload } from 'react-icons/fi';
 import ConfigHeader from './ConfigHeader';
-import { clearConfigCache, createBackup, getConfigSection, resetConfigData } from '../../services/configService';
+import { CACHE_PREFIX, readPermanent, savePermanent } from './configCache';
 import './ConfigStyles.css';
 
-export default function BackupConfigScreen() {
-  const [respaldos, setRespaldos] = useState([]);
-  const [msg, setMsg] = useState('');
-
-  useEffect(() => { getConfigSection('respaldos').then(setRespaldos); }, []);
-
-  const makeBackup = async () => {
-    setRespaldos(await createBackup());
-    setMsg('Respaldo local creado.');
-  };
-
-  const reset = async () => {
-    if (!window.confirm('Esto regresará los datos de ejemplo. ¿Continuar?')) return;
-    const data = await resetConfigData();
-    setRespaldos(data.respaldos);
-    setMsg('Datos de ejemplo restaurados.');
-  };
-
-  const clear = async () => {
-    if (!window.confirm('Esto borrará toda la configuración guardada en caché. ¿Continuar?')) return;
-    await clearConfigCache();
-    setRespaldos([]);
-    setMsg('Caché de configuración eliminada.');
-  };
-
-  return (
-    <main className="config-page">
-      <ConfigHeader title="Copias de Seguridad" />
-      <section className="config-content">
-        <div className="config-card">
-          <h2>💾 Respaldos locales</h2>
-          <p>Crea respaldos del módulo de configuración dentro del caché local del navegador.</p>
-          <div className="config-actions">
-            <button className="config-btn primary" onClick={makeBackup}>Crear respaldo</button>
-            <button className="config-btn secondary" onClick={reset}>Restaurar ejemplo</button>
-            <button className="config-btn danger" onClick={clear}>Limpiar caché</button>
-          </div>
-          {msg && <p className="config-cache">{msg}</p>}
-        </div>
-
-        <h2 className="config-section-title">Historial</h2>
-        {respaldos.length === 0 && <div className="config-card config-empty">No hay respaldos registrados.</div>}
-        {respaldos.map((b) => (
-          <article className="config-card" key={b.id}>
-            <h3>{b.nombre}</h3>
-            <p>Tipo: {b.tipo} · Fecha: {new Date(b.fecha).toLocaleString()}</p>
-          </article>
-        ))}
-      </section>
-    </main>
-  );
+export default function BackupConfigScreen(){
+ const [backups,setBackups]=useState(()=>readPermanent('backups',[{id:'B-001',nombre:'respaldo_inicial.json',fecha:new Date().toISOString(),tipo:'Manual'}])); const [msg,setMsg]=useState('');
+ const collect=()=>{const data={};Object.keys(localStorage).filter(k=>k.startsWith(CACHE_PREFIX)).forEach(k=>data[k]=localStorage.getItem(k));return data};
+ const create=()=>{const data=collect();const blob=new Blob([JSON.stringify(data,null,2)],{type:'application/json'});const name=`respaldo_config_${new Date().toISOString().slice(0,10)}.json`;const a=document.createElement('a');a.href=URL.createObjectURL(blob);a.download=name;a.click();const next=[{id:`B-${Date.now()}`,nombre:name,fecha:new Date().toISOString(),tipo:'Manual'},...backups];setBackups(next);savePermanent('backups',next);setMsg('Respaldo creado y descargado.')};
+ const restore=(e)=>{const file=e.target.files?.[0];if(!file)return;const reader=new FileReader();reader.onload=()=>{try{const data=JSON.parse(reader.result);Object.entries(data).forEach(([k,v])=>localStorage.setItem(k,v));setMsg('Respaldo restaurado. Recarga la página.')}catch{setMsg('Archivo de respaldo inválido.')}};reader.readAsText(file)};
+ const clear=()=>{if(!window.confirm('¿Limpiar todo el caché de configuración?'))return;Object.keys(localStorage).filter(k=>k.startsWith(CACHE_PREFIX)).forEach(k=>localStorage.removeItem(k));setMsg('Caché de configuración eliminado.')};
+ return <main className="config-page"><ConfigHeader title="Copias de seguridad"/><section className="config-content"><div className="config-card config-main-card"><div className="config-card-header"><h2>💾 Copias de seguridad</h2></div><div className="config-card-body"><div className="config-section-box"><h3 className="config-subtitle">Acciones</h3><div className="config-actions"><button className="config-btn success" onClick={create}><FiDownload/>Crear respaldo</button><label className="config-btn secondary"><FiUpload/>Restaurar respaldo<input type="file" accept="application/json" hidden onChange={restore}/></label><button className="config-btn warning" onClick={()=>window.location.reload()}><FiRefreshCw/>Recargar sistema</button><button className="config-btn danger" onClick={clear}><FiTrash2/>Limpiar caché</button></div>{msg&&<div className="config-alert">{msg}</div>}</div><h2 className="config-section-title">Historial de respaldos</h2>{backups.map(b=><article className="config-card" key={b.id}><div className="config-row"><div><h3>{b.nombre}</h3><p>{new Date(b.fecha).toLocaleString()} · {b.tipo}</p></div><span className="config-badge info">JSON</span></div></article>)}</div></div></section></main>
 }

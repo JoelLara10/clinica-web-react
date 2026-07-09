@@ -1,61 +1,8 @@
-import { useEffect, useState } from 'react';
+import { useState } from 'react';
+import { FiSave } from 'react-icons/fi';
 import ConfigHeader from './ConfigHeader';
-import { getConfigSection, saveConfigSection } from '../../services/configService';
+import { readPermanent, savePermanent } from './configCache';
 import './ConfigStyles.css';
 
-export default function GeneralSettingsScreen() {
-  const [form, setForm] = useState({ nombreClinica: '', telefono: '', direccion: '', moneda: 'MXN', tema: 'Morado', apiHost: '192.168.1.4', apiPort: '5001', apiPath: '/api/v1' });
-  const [msg, setMsg] = useState('');
-
-  useEffect(() => { getConfigSection('general').then((data) => setForm((old) => ({ ...old, ...data }))); }, []);
-
-  const save = async (e) => {
-    e.preventDefault();
-    await saveConfigSection('general', form);
-    setMsg('Configuración guardada en caché. Recarga la página para que Axios use la nueva URL si cambiaste la IP.');
-  };
-
-  return (
-    <main className="config-page">
-      <ConfigHeader title="Configuración General" />
-      <section className="config-content">
-        <div className="config-card">
-          <h2>🏥 Datos de la clínica</h2>
-          <p>Todo se guarda localmente en el caché del navegador con <b>localStorage</b>.</p>
-        </div>
-
-        <form className="config-card config-form" onSubmit={save}>
-          <label className="config-label">Nombre de la clínica</label>
-          <input className="config-input" value={form.nombreClinica} onChange={(e) => setForm({ ...form, nombreClinica: e.target.value })} />
-
-          <label className="config-label">Teléfono</label>
-          <input className="config-input" value={form.telefono} onChange={(e) => setForm({ ...form, telefono: e.target.value })} />
-
-          <label className="config-label">Dirección</label>
-          <input className="config-input" value={form.direccion} onChange={(e) => setForm({ ...form, direccion: e.target.value })} />
-
-          <label className="config-label">Moneda</label>
-          <input className="config-input" value={form.moneda} onChange={(e) => setForm({ ...form, moneda: e.target.value.toUpperCase() })} />
-
-          <label className="config-label">Tema visual</label>
-          <select className="config-select" value={form.tema} onChange={(e) => setForm({ ...form, tema: e.target.value })}>
-            <option>Morado</option><option>Azul</option><option>Verde</option><option>Oscuro</option>
-          </select>
-
-          <h3>Conexión API</h3>
-          <label className="config-label">IP del servidor</label>
-          <input className="config-input" value={form.apiHost} onChange={(e) => setForm({ ...form, apiHost: e.target.value })} placeholder="192.168.1.4" />
-
-          <label className="config-label">Puerto</label>
-          <input className="config-input" value={form.apiPort} onChange={(e) => setForm({ ...form, apiPort: e.target.value })} placeholder="5001" />
-
-          <label className="config-label">Ruta base</label>
-          <input className="config-input" value={form.apiPath} onChange={(e) => setForm({ ...form, apiPath: e.target.value })} placeholder="/api/v1" />
-
-          <button className="config-btn primary" type="submit">Guardar configuración</button>
-          {msg && <p className="config-cache">{msg}</p>}
-        </form>
-      </section>
-    </main>
-  );
-}
+const defaults={nombreClinica:'INEO Hospital',telefono:'722 000 0000',direccion:'Toluca, México',moneda:'MXN',tema:'Morado',apiHost:'192.168.1.4',apiPort:'5001',apiPath:'/api/v1'};
+export default function GeneralSettingsScreen(){const[form,setForm]=useState(()=>readPermanent('general',defaults));const[msg,setMsg]=useState('');const save=e=>{e.preventDefault();savePermanent('general',form);setMsg('Configuración general guardada en caché.')};return <main className="config-page"><ConfigHeader title="Configuración General"/><section className="config-content"><form className="config-card config-main-card" onSubmit={save}><div className="config-card-header"><h2>🏥 Configuración General</h2></div><div className="config-card-body"><div className="config-section-box"><h3 className="config-subtitle">Datos de la clínica</h3><label className="config-label">Nombre de la clínica</label><input className="config-input" value={form.nombreClinica} onChange={e=>setForm({...form,nombreClinica:e.target.value})}/><label className="config-label">Teléfono</label><input className="config-input" value={form.telefono} onChange={e=>setForm({...form,telefono:e.target.value})}/><label className="config-label">Dirección</label><input className="config-input" value={form.direccion} onChange={e=>setForm({...form,direccion:e.target.value})}/><div className="config-grid-2"><div><label className="config-label">Moneda</label><input className="config-input" value={form.moneda} onChange={e=>setForm({...form,moneda:e.target.value.toUpperCase()})}/></div><div><label className="config-label">Tema</label><select className="config-select" value={form.tema} onChange={e=>setForm({...form,tema:e.target.value})}><option>Morado</option><option>Azul</option><option>Verde</option><option>Oscuro</option></select></div></div></div><div className="config-section-box"><h3 className="config-subtitle">Conexión API</h3><div className="config-grid-3"><div><label className="config-label">IP del servidor</label><input className="config-input" value={form.apiHost} onChange={e=>setForm({...form,apiHost:e.target.value})}/></div><div><label className="config-label">Puerto</label><input className="config-input" value={form.apiPort} onChange={e=>setForm({...form,apiPort:e.target.value})}/></div><div><label className="config-label">Ruta base</label><input className="config-input" value={form.apiPath} onChange={e=>setForm({...form,apiPath:e.target.value})}/></div></div></div><div className="config-form-footer"><button className="config-btn success" type="submit"><FiSave/>Guardar configuración</button></div>{msg&&<div className="config-alert success">{msg}</div>}</div></form></section></main>}
