@@ -5,12 +5,17 @@ import LoginScreen from '../pages/auth/LoginScreen';
 import MainLayout from '../components/layout/MainLayout';
 import DashboardScreen from '../pages/dashboard/DashboardScreen';
 
+// Enfermeria
 import EnfermeriaScreen from '../pages/enfermeria/EnfermeriaScreen';
 import PatientDetailScreen from '../pages/enfermeria/PatientDetailScreen';
 import EnfermeriaVitalSignsScreen from '../pages/enfermeria/EnfermeriaVitalSignsScreen';
 import EnfermeriaNoteScreen from '../pages/enfermeria/EnfermeriaNoteScreen';
 import EnfermeriaMedicationsScreen from '../pages/enfermeria/EnfermeriaMedicationsScreen';
+import EnfermeriaAssessmentScreen from '../pages/enfermeria/EnfermeriaAssessmentScreen';
+import EnfermeriaCareScreen from '../pages/enfermeria/EnfermeriaCareScreen';
+import EnfermeriaFluidBalanceScreen from '../pages/enfermeria/EnfermeriaFluidBalanceScreen';
 
+//Medico
 import MedicoScreen from '../pages/medico/MedicoScreen';
 import MedicoPatientDetailScreen from '../pages/medico/PatientDetailScreen';
 import VitalSignsScreen from '../pages/medico/VitalSignsScreen';
@@ -24,6 +29,7 @@ import PrintDocsScreen from '../pages/medico/PrintDocsScreen';
 import StudyResultsScreen from '../pages/medico/StudyResultsScreen';
 import VitalSignsListScreen from '../pages/medico/VitalSignsListScreen';
 
+//Estudios
 import EstudiosScreen from '../pages/estudios/EstudiosScreen';
 import SubirResultadoScreen from '../pages/estudios/SubirResultadoScreen';
 import VerResultadoLabScreen from '../pages/estudios/VerResultadoLabScreen';
@@ -31,6 +37,7 @@ import VerResultadoGabScreen from '../pages/estudios/VerResultadoGabScreen';
 import EditarResultadoLabScreen from '../pages/estudios/EditarResultadoLabScreen';
 import EditarResultadoGabScreen from '../pages/estudios/EditarResultadoGabScreen';
 
+// Config
 import ConfigScreen from '../pages/config/ConfigScreen';
 import GeneralSettingsScreen from '../pages/config/GeneralSettingsScreen';
 import UsuariosConfigScreen from '../pages/config/UsuariosConfigScreen';
@@ -123,6 +130,9 @@ export default function AppRouter() {
                     <Route path="enfermeria/signos-vitales" element={<EnfermeriaVitalSignsScreen />} />
                     <Route path="enfermeria/nota" element={<EnfermeriaNoteScreen />} />
                     <Route path="enfermeria/medicamentos" element={<EnfermeriaMedicationsScreen />} />
+                    <Route path="enfermeria/valoracion" element={<EnfermeriaAssessmentScreen />} />
+                    <Route path="enfermeria/cuidados" element={<EnfermeriaCareScreen />} />
+                    <Route path="enfermeria/balance-hidrico" element={<EnfermeriaFluidBalanceScreen />} />
                   </>
                 )}
 
