@@ -5,6 +5,7 @@ import { usePatient } from '../../context/PatientContext';
 import api from '../../services/api';
 import moment from 'moment';
 import 'moment/locale/es';
+import { useTranslation } from 'react-i18next';
 
 moment.locale('es');
 
@@ -51,6 +52,8 @@ function parseNumericValue(value) {
 }
 
 export default function EnfermeriaVitalSignsScreen() {
+  const { t, i18n } = useTranslation();
+  moment.locale(i18n.language === 'en' ? 'en' : 'es');
   const navigate = useNavigate();
   const location = useLocation();
   const { selectedPatient } = usePatient();
@@ -74,7 +77,7 @@ export default function EnfermeriaVitalSignsScreen() {
 
   useEffect(() => {
     if (!idAtencion) {
-      setErrorMessage('Selecciona un paciente antes de registrar signos vitales.');
+      setErrorMessage(t('vitalSigns.selectPatientFirst'));
       return;
     }
 
@@ -135,7 +138,7 @@ export default function EnfermeriaVitalSignsScreen() {
   const handleSubmit = async () => {
     const hasData = Object.values(formData).some((value) => value !== '');
     if (!hasData) {
-      window.alert('Ingrese al menos un signo vital');
+      window.alert(t('vitalSigns.enterAtLeastOne'));
       return;
     }
 
@@ -162,20 +165,20 @@ export default function EnfermeriaVitalSignsScreen() {
       }
     } catch (error) {
       console.error('Error saving vital signs:', error);
-      window.alert(error.response?.data?.error || 'No se pudieron guardar los signos vitales');
+      window.alert(error.response?.data?.error || t('vitalSigns.saveError'));
     } finally {
       setLoading(false);
     }
   };
 
   const fieldConfig = [
-    { key: 'ta', label: 'Presión arterial (TA)', placeholder: '120/80', accent: '#ef4444' },
-    { key: 'fc', label: 'Frecuencia cardíaca (FC)', placeholder: 'lpm', accent: '#ef4444' },
-    { key: 'fr', label: 'Frecuencia respiratoria (FR)', placeholder: 'rpm', accent: '#f97316' },
-    { key: 'temp', label: 'Temperatura (°C)', placeholder: '36.5', accent: '#f97316' },
-    { key: 'spo2', label: 'SpO2 (%)', placeholder: '98', accent: '#0ea5e9' },
-    { key: 'peso', label: 'Peso (kg)', placeholder: '70', accent: '#16a34a' },
-    { key: 'talla', label: 'Talla (m)', placeholder: '1.70', accent: '#7c3aed' },
+    { key: 'ta', label: t('vitalSigns.ta'), placeholder: '120/80', accent: '#ef4444' },
+    { key: 'fc', label: t('vitalSigns.fc'), placeholder: 'lpm', accent: '#ef4444' },
+    { key: 'fr', label: t('vitalSigns.fr'), placeholder: 'rpm', accent: '#f97316' },
+    { key: 'temp', label: t('vitalSigns.temp'), placeholder: '36.5', accent: '#f97316' },
+    { key: 'spo2', label: t('vitalSigns.spo2'), placeholder: '98', accent: '#0ea5e9' },
+    { key: 'peso', label: t('vitalSigns.peso'), placeholder: '70', accent: '#16a34a' },
+    { key: 'talla', label: t('vitalSigns.talla'), placeholder: '1.70', accent: '#7c3aed' },
   ];
 
   return (
@@ -185,8 +188,8 @@ export default function EnfermeriaVitalSignsScreen() {
           <FiArrowLeft size={20} />
         </button>
         <div>
-          <div style={styles.headerEyebrow}>ENFERMERÍA</div>
-          <h1 style={styles.headerTitle}>Signos Vitales</h1>
+          <div style={styles.headerEyebrow}>{t('vitalSigns.eyebrow')}</div>
+          <h1 style={styles.headerTitle}>{t('vitalSigns.title')}</h1>
         </div>
         <div style={styles.headerSpacer} />
       </div>
@@ -194,7 +197,7 @@ export default function EnfermeriaVitalSignsScreen() {
       <section style={styles.patientCard}>
         <div style={styles.patientAvatar}><FiUser size={30} color="#fff" /></div>
         <div>
-          <h2 style={styles.patientName}>Paciente seleccionado</h2>
+          <h2 style={styles.patientName}>{t('vitalSigns.selectedPatient')}</h2>
           <p style={styles.patientMeta}>{patientLabel}</p>
         </div>
       </section>
@@ -204,7 +207,7 @@ export default function EnfermeriaVitalSignsScreen() {
       <section style={styles.mainCard}>
         <div style={styles.cardHeader}>
           <FiHeart size={20} />
-          <strong>Nuevo Registro de Signos Vitales</strong>
+          <strong>{t('vitalSigns.newRecord')}</strong>
         </div>
 
         <div style={styles.formGrid}>
@@ -224,11 +227,11 @@ export default function EnfermeriaVitalSignsScreen() {
 
         <div style={styles.cardFooter}>
           <button type="button" style={styles.cancelButton} onClick={() => navigate(-1)}>
-            Regresar
+            {t('vitalSigns.back')}
           </button>
           <button type="button" style={styles.saveButton} onClick={handleSubmit} disabled={!idAtencion || loading}>
             <FiSave size={18} />
-            <span>{loading ? 'Guardando...' : 'Guardar signos vitales'}</span>
+            <span>{loading ? t('vitalSigns.saving') : t('vitalSigns.save')}</span>
           </button>
         </div>
       </section>
@@ -236,15 +239,15 @@ export default function EnfermeriaVitalSignsScreen() {
       <section style={styles.historyCard}>
         <div style={styles.historyHeader}>
           <FiActivity size={18} />
-          <strong>Historial de Signos Vitales</strong>
-          <span style={styles.historyCount}>{history.length} registros</span>
+          <strong>{t('vitalSigns.history')}</strong>
+          <span style={styles.historyCount}>{t('vitalSigns.records', { count: history.length })}</span>
         </div>
 
         <div style={styles.historyBody}>
           {loadingHistory ? (
-            <div style={styles.statusBox}>Cargando historial...</div>
+            <div style={styles.statusBox}>{t('vitalSigns.loadingHistory')}</div>
           ) : history.length === 0 ? (
-            <div style={styles.statusBox}>No hay registros previos.</div>
+            <div style={styles.statusBox}>{t('vitalSigns.noRecords')}</div>
           ) : (
             history.map((item, index) => (
               <article key={item.id_signos || `${item.fecha_registro || 'sv'}-${index}`} style={styles.historyItem}>
@@ -266,7 +269,7 @@ export default function EnfermeriaVitalSignsScreen() {
 
       <footer style={styles.footer}>
         <FiShield size={14} />
-        <span>INEO v2.0 - Registro de signos vitales</span>
+        <span>{t('vitalSigns.footer')}</span>
       </footer>
     </div>
   );

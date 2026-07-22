@@ -4,10 +4,9 @@ import { FiArrowLeft, FiChevronDown, FiChevronUp, FiClock, FiRefreshCw, FiSave, 
 import { MdBiotech } from 'react-icons/md';
 import { usePatient } from '../../context/PatientContext';
 import api from '../../services/api';
+import { useTranslation } from 'react-i18next';
 import moment from 'moment';
 import 'moment/locale/es';
-
-moment.locale('es');
 
 const CATALOG_CACHE = 'ineo_web_cache_lab_catalog';
 const HISTORY_PREFIX = 'ineo_web_cache_lab_history_';
@@ -41,6 +40,8 @@ function setCachedValue(key, data, ttl) {
 }
 
 export default function LabExamsScreen() {
+  const { t, i18n } = useTranslation();
+  moment.locale(i18n.language === 'en' ? 'en' : 'es');
   const navigate = useNavigate();
   const location = useLocation();
   const { selectedPatient } = usePatient();
@@ -60,7 +61,7 @@ export default function LabExamsScreen() {
 
   useEffect(() => {
     if (!idAtencion) {
-      setErrorMessage('Selecciona un paciente antes de solicitar exámenes de laboratorio.');
+      setErrorMessage(t('labExams.selectPatientFirst'));
       return;
     }
 
@@ -157,7 +158,7 @@ export default function LabExamsScreen() {
 
   const handleSubmit = async () => {
     if (selectedExams.length === 0) {
-      window.alert('Selecciona al menos un examen de laboratorio.');
+      window.alert(t('labExams.selectAtLeastOne'));
       return;
     }
 
@@ -175,7 +176,7 @@ export default function LabExamsScreen() {
       await reloadHistory();
     } catch (error) {
       console.error('Error requesting lab exams:', error);
-      window.alert(error.response?.data?.error || 'No se pudieron solicitar los exámenes');
+      window.alert(error.response?.data?.error || t('labExams.requestError'));
     } finally {
       setLoading(false);
     }
@@ -187,7 +188,7 @@ export default function LabExamsScreen() {
         <button type="button" onClick={() => navigate(-1)} style={styles.headerButton}><FiArrowLeft size={20} /></button>
         <div>
           <div style={styles.headerEyebrow}>MÉDICO</div>
-          <h1 style={styles.headerTitle}>Exámenes de Laboratorio</h1>
+          <h1 style={styles.headerTitle}>{t('labExams.title')}</h1>
         </div>
         <button type="button" onClick={reloadData} style={styles.headerActionButton} disabled={!idAtencion || loadingCatalog || loadingHistory}><FiRefreshCw size={18} /></button>
       </div>
@@ -195,7 +196,7 @@ export default function LabExamsScreen() {
       <section style={styles.patientCard}>
         <div style={styles.patientAvatar}><FiUser size={30} color="#fff" /></div>
         <div>
-          <h2 style={styles.patientName}>Paciente seleccionado</h2>
+          <h2 style={styles.patientName}>{t('labExams.selectedPatient')}</h2>
           <p style={styles.patientMeta}>{patientLabel}</p>
         </div>
       </section>
@@ -203,14 +204,14 @@ export default function LabExamsScreen() {
       {errorMessage ? <div style={styles.errorCard}>{errorMessage}</div> : null}
 
       <section style={styles.mainCard}>
-        <div style={styles.cardHeader}><MdBiotech size={22} /><strong>Nueva Solicitud</strong></div>
+        <div style={styles.cardHeader}><MdBiotech size={22} /><strong>{t('labExams.newRequest')}</strong></div>
         <div style={styles.cardBody}>
           <div style={styles.sectionTop}>
-            <strong style={styles.sectionTitle}>Catálogo</strong>
-            <span style={styles.sectionCount}>{selectedExams.length} seleccionados</span>
+            <strong style={styles.sectionTitle}>{t('labExams.catalog')}</strong>
+            <span style={styles.sectionCount}>{t('labExams.selected', { count: selectedExams.length })}</span>
           </div>
 
-          {loadingCatalog ? <div style={styles.statusBox}>Cargando catálogo...</div> : exams.length === 0 ? <div style={styles.statusBox}>No hay exámenes disponibles.</div> : (
+          {loadingCatalog ? <div style={styles.statusBox}>{t('labExams.loadingCatalog')}</div> : exams.length === 0 ? <div style={styles.statusBox}>{t('labExams.noExamsAvailable')}</div> : (
             <div style={styles.examsGrid}>
               {exams.map((exam) => {
                 const selected = selectedExams.includes(exam.id_catalogo);
@@ -225,25 +226,25 @@ export default function LabExamsScreen() {
           )}
 
           <label style={styles.fieldGroup}>
-            <span style={styles.fieldLabel}>Observaciones</span>
-            <textarea style={styles.textArea} rows={4} value={observations} placeholder="Indicaciones para laboratorio..." onChange={(event) => setObservations(event.target.value)} />
+            <span style={styles.fieldLabel}>{t('labExams.observations')}</span>
+            <textarea style={styles.textArea} rows={4} value={observations} placeholder={t('labExams.observationsPlaceholder')} onChange={(event) => setObservations(event.target.value)} />
           </label>
 
           <div style={styles.actionsRow}>
-            <button type="button" style={styles.secondaryButton} onClick={() => navigate('/medico/resultados', { state: { id_atencion: idAtencion, Id_exp: idExp } })}>Ver resultados</button>
-            <button type="button" style={styles.primaryButton} onClick={handleSubmit} disabled={!idAtencion || loading}><FiSave size={18} /> {loading ? 'Solicitando...' : 'Solicitar'}</button>
+            <button type="button" style={styles.secondaryButton} onClick={() => navigate('/medico/resultados', { state: { id_atencion: idAtencion, Id_exp: idExp } })}>{t('labExams.viewResults')}</button>
+            <button type="button" style={styles.primaryButton} onClick={handleSubmit} disabled={!idAtencion || loading}><FiSave size={18} /> {loading ? t('labExams.requesting') : t('labExams.request')}</button>
           </div>
         </div>
       </section>
 
       <section style={styles.historyCard}>
         <button type="button" style={styles.historyToggle} onClick={() => setShowHistory((current) => !current)}>
-          <div style={styles.historyTitle}><FiClock size={18} /><strong>Historial</strong><span style={styles.historyCount}>{history.length}</span></div>
+          <div style={styles.historyTitle}><FiClock size={18} /><strong>{t('labExams.history')}</strong><span style={styles.historyCount}>{history.length}</span></div>
           {showHistory ? <FiChevronUp size={18} /> : <FiChevronDown size={18} />}
         </button>
         {showHistory ? (
           <div style={styles.historyBody}>
-            {loadingHistory ? <div style={styles.statusBox}>Cargando historial...</div> : history.length === 0 ? <div style={styles.statusBox}>Sin solicitudes previas.</div> : history.map((item, index) => (
+            {loadingHistory ? <div style={styles.statusBox}>{t('labExams.loadingHistory')}</div> : history.length === 0 ? <div style={styles.statusBox}>{t('labExams.noRequests')}</div> : history.map((item, index) => (
               <article key={item.id_examen || `${item.fecha || 'lab'}-${index}`} style={styles.historyItem}>
                 <div style={styles.historyDate}>{moment(item.fecha_solicitud || item.fecha).format('DD/MM/YYYY HH:mm')}</div>
                 <div style={styles.historyDoctor}>Dr. {item.medico || item.medico_nombre || 'No especificado'}</div>
@@ -256,7 +257,7 @@ export default function LabExamsScreen() {
         ) : null}
       </section>
 
-      <footer style={styles.footer}><FiShield size={14} /><span>INEO v2.0 - Laboratorio</span></footer>
+      <footer style={styles.footer}><FiShield size={14} /><span>{t('labExams.footer')}</span></footer>
     </div>
   );
 }

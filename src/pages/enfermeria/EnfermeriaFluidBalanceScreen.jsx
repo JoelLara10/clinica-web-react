@@ -5,10 +5,13 @@ import { usePatient } from '../../context/PatientContext';
 import api from '../../services/api';
 import moment from 'moment';
 import 'moment/locale/es';
+import { useTranslation } from 'react-i18next';
 
 moment.locale('es');
 
 export default function EnfermeriaFluidBalanceScreen() {
+  const { t, i18n } = useTranslation();
+  moment.locale(i18n.language === 'en' ? 'en' : 'es');
   const navigate = useNavigate();
   const location = useLocation();
   const { selectedPatient } = usePatient();
@@ -62,10 +65,10 @@ export default function EnfermeriaFluidBalanceScreen() {
         observaciones: '',
       });
       await loadHistory();
-      window.alert('Balance hídrico guardado correctamente');
+      window.alert(t('nursingFluidBalance.saveSuccess'));
     } catch (error) {
       console.error('Error saving fluid balance:', error);
-      window.alert(error.response?.data?.error || 'No se pudo guardar el balance hídrico');
+      window.alert(error.response?.data?.error || t('nursingFluidBalance.saveError'));
     } finally {
       setLoading(false);
     }
@@ -78,8 +81,8 @@ export default function EnfermeriaFluidBalanceScreen() {
           <FiArrowLeft size={20} />
         </button>
         <div>
-          <div style={styles.headerEyebrow}>ENFERMERÍA</div>
-          <h1 style={styles.headerTitle}>Balance Hídrico</h1>
+          <div style={styles.headerEyebrow}>{t('nursingFluidBalance.eyebrow')}</div>
+          <h1 style={styles.headerTitle}>{t('nursingFluidBalance.title')}</h1>
         </div>
         <div style={styles.headerSpacer} />
       </div>
@@ -87,31 +90,31 @@ export default function EnfermeriaFluidBalanceScreen() {
       <section style={styles.patientCard}>
         <div style={styles.patientAvatar}><FiUser size={30} color="#fff" /></div>
         <div>
-          <h2 style={styles.patientName}>Paciente seleccionado</h2>
+          <h2 style={styles.patientName}>{t('nursingFluidBalance.selectedPatient')}</h2>
           <p style={styles.patientMeta}>{patientLabel}</p>
         </div>
       </section>
 
       <section style={styles.mainCard}>
         <div style={styles.formGrid}>
-          <input style={styles.input} type="number" placeholder="Ingresos orales (ml)" value={formData.ingresos_orales} onChange={(e) => handleChange('ingresos_orales', e.target.value)} />
-          <input style={styles.input} type="number" placeholder="Ingresos IV (ml)" value={formData.ingresos_iv} onChange={(e) => handleChange('ingresos_iv', e.target.value)} />
-          <input style={styles.input} type="number" placeholder="Egresos orina (ml)" value={formData.egresos_orina} onChange={(e) => handleChange('egresos_orina', e.target.value)} />
-          <input style={styles.input} type="number" placeholder="Egresos drenajes (ml)" value={formData.egresos_drenajes} onChange={(e) => handleChange('egresos_drenajes', e.target.value)} />
+          <input style={styles.input} type="number" placeholder={t('nursingFluidBalance.oralInputsPlaceholder')} value={formData.ingresos_orales} onChange={(e) => handleChange('ingresos_orales', e.target.value)} />
+          <input style={styles.input} type="number" placeholder={t('nursingFluidBalance.ivInputsPlaceholder')} value={formData.ingresos_iv} onChange={(e) => handleChange('ingresos_iv', e.target.value)} />
+          <input style={styles.input} type="number" placeholder={t('nursingFluidBalance.urineOutputsPlaceholder')} value={formData.egresos_orina} onChange={(e) => handleChange('egresos_orina', e.target.value)} />
+          <input style={styles.input} type="number" placeholder={t('nursingFluidBalance.drainageOutputsPlaceholder')} value={formData.egresos_drenajes} onChange={(e) => handleChange('egresos_drenajes', e.target.value)} />
         </div>
         <textarea
           style={styles.textArea}
           rows={3}
-          placeholder="Observaciones"
+          placeholder={t('nursingFluidBalance.observationsPlaceholder')}
           value={formData.observaciones}
           onChange={(e) => handleChange('observaciones', e.target.value)}
         />
         <div style={styles.buttonRow}>
           <button type="button" style={styles.secondaryButton} onClick={loadHistory} disabled={loadingHistory}>
-            <FiRefreshCw size={16} /> Recargar
+            <FiRefreshCw size={16} /> {t('nursingFluidBalance.reload')}
           </button>
           <button type="button" style={styles.primaryButton} onClick={handleSubmit} disabled={!idAtencion || loading}>
-            <FiSave size={16} /> {loading ? 'Guardando...' : 'Guardar balance'}
+            <FiSave size={16} /> {loading ? t('nursingFluidBalance.saving') : t('nursingFluidBalance.save')}
           </button>
         </div>
       </section>
@@ -119,19 +122,19 @@ export default function EnfermeriaFluidBalanceScreen() {
       <section style={styles.historyCard}>
         <div style={styles.historyHeader}>
           <FiClock size={16} />
-          <strong>Historial</strong>
+          <strong>{t('nursingFluidBalance.history')}</strong>
           <span style={styles.count}>{history.length}</span>
         </div>
-        {loadingHistory ? <div style={styles.status}>Cargando...</div> : history.length === 0 ? (
-          <div style={styles.status}>Sin registros</div>
+        {loadingHistory ? <div style={styles.status}>{t('nursingFluidBalance.loading')}</div> : history.length === 0 ? (
+          <div style={styles.status}>{t('nursingFluidBalance.noRecords')}</div>
         ) : (
           history.map((item, index) => (
             <article key={item.id_balance || index} style={styles.historyItem}>
-              <div style={styles.historyDate}>{moment(item.fecha_registro).format('DD/MM/YYYY HH:mm')} - Enf. {item.enfermero_nombre || 'No especificado'}</div>
-              <div style={styles.historyText}>Ingresos: {item.total_ingresos || 0} ml</div>
-              <div style={styles.historyText}>Egresos: {item.total_egresos || 0} ml</div>
-              <div style={styles.historyText}>Balance neto: {item.balance_neto || 0} ml</div>
-              <div style={styles.historyText}>Observaciones: {item.observaciones || 'Sin observaciones'}</div>
+              <div style={styles.historyDate}>{moment(item.fecha_registro).format('DD/MM/YYYY HH:mm')} - Enf. {item.enfermero_nombre || t('nursingFluidBalance.notSpecified')}</div>
+              <div style={styles.historyText}>{t('nursingFluidBalance.inputsLabel') + ' '}{item.total_ingresos || 0} ml</div>
+              <div style={styles.historyText}>{t('nursingFluidBalance.outputsLabel') + ' '}{item.total_egresos || 0} ml</div>
+              <div style={styles.historyText}>{t('nursingFluidBalance.netBalance') + ' '}{item.balance_neto || 0} ml</div>
+              <div style={styles.historyText}>{t('nursingFluidBalance.observationsLabel') + ' '}{item.observaciones || t('nursingFluidBalance.noObservations')}</div>
             </article>
           ))
         )}
@@ -139,7 +142,7 @@ export default function EnfermeriaFluidBalanceScreen() {
 
       <footer style={styles.footer}>
         <FiShield size={14} />
-        <span>INEO v2.0 - Balance hídrico</span>
+        <span>{t('nursingFluidBalance.footer')}</span>
       </footer>
     </div>
   );

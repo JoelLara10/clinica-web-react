@@ -1,5 +1,6 @@
 import { useCallback, useEffect, useMemo, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
+import { useTranslation } from 'react-i18next';
 import { FiActivity, FiAlertCircle, FiArrowLeft, FiChevronLeft, FiChevronRight, FiHeart, FiRefreshCw, FiShield, FiUser } from 'react-icons/fi';
 import { MdLocalHospital, MdOutlineBed } from 'react-icons/md';
 import { useAuth } from '../../context/AuthContext';
@@ -7,6 +8,7 @@ import { usePatient } from '../../context/PatientContext';
 import api from '../../services/api';
 import moment from 'moment';
 import 'moment/locale/es';
+import 'moment/locale/en-gb';
 
 moment.locale('es');
 
@@ -18,12 +20,6 @@ const CACHE_KEYS = {
   urgencias: 'urgencias',
   hospitalizados: 'hospitalizados',
 };
-
-const sections = [
-  { key: 'consulta', title: 'Consulta Externa', color: '#4299e1', icon: MdLocalHospital, emptyLabel: 'No hay pacientes en consulta externa.' },
-  { key: 'urgencias', title: 'Urgencias', color: '#f56565', icon: FiAlertCircle, emptyLabel: 'No hay pacientes en urgencias.' },
-  { key: 'hospitalizados', title: 'Hospitalizados', color: '#48bb78', icon: MdOutlineBed, emptyLabel: 'No hay pacientes hospitalizados.' },
-];
 
 function getCachedValue(key) {
   if (typeof window === 'undefined') return null;
@@ -76,6 +72,7 @@ function getTotalPages(data) {
 }
 
 export default function MedicoScreen() {
+  const { t, i18n } = useTranslation();
   const navigate = useNavigate();
   const { user } = useAuth();
   const { selectPatient } = usePatient();
@@ -84,6 +81,10 @@ export default function MedicoScreen() {
   const [loading, setLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
   const [errorMessage, setErrorMessage] = useState('');
+
+  useEffect(() => {
+    moment.locale(i18n.language === 'en' ? 'en-gb' : 'es');
+  }, [i18n.language]);
 
   const loadPatients = useCallback(async (forceRefresh = false) => {
     setLoading(true);
@@ -130,14 +131,14 @@ export default function MedicoScreen() {
           urgencias: cachedUrgencias || [],
           hospitalizados: cachedHospitalizados || [],
         });
-        setErrorMessage('Sin conexión. Se muestran los datos guardados previamente.');
+        setErrorMessage(t('medical.offlineMessage'));
       } else {
-        setErrorMessage('No se pudieron cargar los pacientes del módulo médico.');
+        setErrorMessage(t('medical.errorMessage'));
       }
     } finally {
       setLoading(false);
     }
-  }, []);
+  }, [t, i18n.language]);
 
   useEffect(() => {
     loadPatients();
@@ -164,6 +165,12 @@ export default function MedicoScreen() {
     });
   };
 
+  const sections = [
+    { key: 'consulta', title: t('medical.outpatient'), color: '#4299e1', icon: MdLocalHospital, emptyLabel: t('medical.noOutpatient') },
+    { key: 'urgencias', title: t('medical.emergency'), color: '#f56565', icon: FiAlertCircle, emptyLabel: t('medical.noEmergency') },
+    { key: 'hospitalizados', title: t('medical.hospitalized'), color: '#48bb78', icon: MdOutlineBed, emptyLabel: t('medical.noHospitalized') },
+  ];
+
   return (
     <div style={styles.page}>
       <div style={styles.header}>
@@ -171,8 +178,8 @@ export default function MedicoScreen() {
           <FiArrowLeft size={20} />
         </button>
         <div>
-          <div style={styles.headerEyebrow}>MÉDICO</div>
-          <h1 style={styles.headerTitle}>Módulo Médico</h1>
+          <div style={styles.headerEyebrow}>{t('medical.headerEyebrow')}</div>
+          <h1 style={styles.headerTitle}>{t('medical.headerTitle')}</h1>
         </div>
         <button type="button" onClick={onRefresh} style={styles.headerButton} disabled={refreshing}>
           <FiRefreshCw size={20} />
@@ -181,16 +188,16 @@ export default function MedicoScreen() {
 
       <div style={styles.heroCard}>
         <div>
-          <p style={styles.heroGreeting}>Hola, Dr. {user?.username || 'Usuario'}</p>
+          <p style={styles.heroGreeting}>{t('medical.greeting', { name: user?.username || 'User' })}</p>
           <p style={styles.heroDate}>{moment().format('dddd, D [de] MMMM [de] YYYY')}</p>
         </div>
-        <div style={styles.heroPill}>Total de pacientes: {totalPatients}</div>
+        <div style={styles.heroPill}>{t('medical.totalPatients', { count: totalPatients })}</div>
       </div>
 
       {errorMessage ? <div style={styles.alert}>{errorMessage}</div> : null}
 
       {loading ? (
-        <div style={styles.loadingCard}>Cargando pacientes...</div>
+        <div style={styles.loadingCard}>{t('medical.loading')}</div>
       ) : (
         sections.map((section) => {
           const sectionData = patientsByArea[section.key];
@@ -229,10 +236,10 @@ export default function MedicoScreen() {
                         <div style={{ ...styles.cardIcon, backgroundColor: `${section.color}18`, color: section.color }}>
                           {isOccupied ? <FiUser size={24} /> : <MdOutlineBed size={24} />}
                         </div>
-                        <strong style={styles.cardTitle}>Cama {item.num_cama || '--'}</strong>
-                        <span style={styles.cardName}>{isOccupied ? getPatientName(item) : 'Disponible'}</span>
+                        <strong style={styles.cardTitle}>{t('medical.bed', { num: item.num_cama || '--' })}</strong>
+                        <span style={styles.cardName}>{isOccupied ? getPatientName(item) : t('medical.available')}</span>
                         <span style={{ ...styles.cardStatus, backgroundColor: isOccupied ? section.color : '#94a3b8' }}>
-                          {isOccupied ? 'OCUPADO' : 'DISPONIBLE'}
+                          {isOccupied ? t('medical.occupied') : t('medical.availableStatus')}
                         </span>
                       </button>
                     );
@@ -270,7 +277,7 @@ export default function MedicoScreen() {
 
       <footer style={styles.footer}>
         <FiShield size={14} />
-        <span>INEO v2.0 - Sistema de Gestión Hospitalaria</span>
+        <span>{t('medical.footer')}</span>
       </footer>
     </div>
   );

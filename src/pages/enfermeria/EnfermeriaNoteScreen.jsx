@@ -5,8 +5,7 @@ import { usePatient } from '../../context/PatientContext';
 import api from '../../services/api';
 import moment from 'moment';
 import 'moment/locale/es';
-
-moment.locale('es');
+import { useTranslation } from 'react-i18next';
 
 const CACHE_PREFIX = 'ineo_web_cache_enfermeria_notes_';
 const CACHE_TTL = 2 * 60 * 1000;
@@ -45,6 +44,9 @@ function setCachedValue(key, data, ttl = CACHE_TTL) {
 }
 
 export default function EnfermeriaNoteScreen() {
+  const { t, i18n } = useTranslation();
+  moment.locale(i18n.language === 'en' ? 'en' : 'es');
+
   const navigate = useNavigate();
   const location = useLocation();
   const { selectedPatient } = usePatient();
@@ -61,7 +63,7 @@ export default function EnfermeriaNoteScreen() {
 
   useEffect(() => {
     if (!idAtencion) {
-      setErrorMessage('Selecciona un paciente antes de registrar una nota de enfermería.');
+      setErrorMessage(t('nursingNote.selectPatientFirst'));
       return;
     }
 
@@ -117,7 +119,7 @@ export default function EnfermeriaNoteScreen() {
 
   const handleSubmit = async () => {
     if (!note.trim()) {
-      window.alert('La nota de enfermería es requerida');
+      window.alert(t('nursingNote.noteRequired'));
       return;
     }
 
@@ -134,7 +136,7 @@ export default function EnfermeriaNoteScreen() {
       }
     } catch (error) {
       console.error('Error saving nursing note:', error);
-      window.alert(error.response?.data?.error || 'No se pudo guardar la nota de enfermería');
+      window.alert(error.response?.data?.error || t('nursingNote.saveError'));
     } finally {
       setLoading(false);
     }
@@ -147,8 +149,8 @@ export default function EnfermeriaNoteScreen() {
           <FiArrowLeft size={20} />
         </button>
         <div>
-          <div style={styles.headerEyebrow}>ENFERMERÍA</div>
-          <h1 style={styles.headerTitle}>Nota de Enfermería</h1>
+          <div style={styles.headerEyebrow}>{t('nursingNote.eyebrow')}</div>
+          <h1 style={styles.headerTitle}>{t('nursingNote.title')}</h1>
         </div>
         <div style={styles.headerSpacer} />
       </div>
@@ -156,7 +158,7 @@ export default function EnfermeriaNoteScreen() {
       <section style={styles.patientCard}>
         <div style={styles.patientAvatar}><FiUser size={30} color="#fff" /></div>
         <div>
-          <h2 style={styles.patientName}>Paciente seleccionado</h2>
+          <h2 style={styles.patientName}>{t('nursingNote.selectedPatient')}</h2>
           <p style={styles.patientMeta}>{patientLabel}</p>
         </div>
       </section>
@@ -166,16 +168,16 @@ export default function EnfermeriaNoteScreen() {
       <section style={styles.mainCard}>
         <div style={styles.cardHeader}>
           <FiFileText size={20} />
-          <strong>Nueva Nota de Enfermería</strong>
+          <strong>{t('nursingNote.newNote')}</strong>
         </div>
 
         <div style={styles.formSection}>
           <div style={styles.badge}>N</div>
           <div style={styles.formContent}>
-            <label style={styles.label}>Observaciones y cuidados</label>
+            <label style={styles.label}>{t('nursingNote.observationsLabel')}</label>
             <textarea
               style={styles.textArea}
-              placeholder="Observaciones del paciente, cuidados realizados, evolución..."
+              placeholder={t('nursingNote.observationsPlaceholder')}
               value={note}
               onChange={(event) => setNote(event.target.value)}
               rows={8}
@@ -186,7 +188,7 @@ export default function EnfermeriaNoteScreen() {
 
         <button type="button" style={styles.saveButton} onClick={handleSubmit} disabled={!idAtencion || loading}>
           <FiSave size={18} />
-          <span>{loading ? 'Guardando...' : 'Guardar Nota'}</span>
+          <span>{loading ? t('nursingNote.saving') : t('nursingNote.save')}</span>
         </button>
       </section>
 
@@ -194,8 +196,8 @@ export default function EnfermeriaNoteScreen() {
         <button type="button" style={styles.historyToggle} onClick={() => setShowHistory((current) => !current)}>
           <div style={styles.historyTitleRow}>
             <FiClock size={18} />
-            <strong>Historial de Notas</strong>
-            <span style={styles.historyCount}>{history.length} notas</span>
+            <strong>{t('nursingNote.noteHistory')}</strong>
+            <span style={styles.historyCount}>{t('nursingNote.notesCount', { count: history.length })}</span>
           </div>
           {showHistory ? <FiChevronUp size={18} /> : <FiChevronDown size={18} />}
         </button>
@@ -203,9 +205,9 @@ export default function EnfermeriaNoteScreen() {
         {showHistory ? (
           <div style={styles.historyBody}>
             {loadingHistory ? (
-              <div style={styles.statusBox}>Cargando historial...</div>
+              <div style={styles.statusBox}>{t('nursingNote.loadingHistory')}</div>
             ) : history.length === 0 ? (
-              <div style={styles.statusBox}>No hay notas previas.</div>
+              <div style={styles.statusBox}>{t('nursingNote.noNotes')}</div>
             ) : (
               history.map((item, index) => (
                 <article key={item.id_nota || `${item.fecha_registro || 'note'}-${index}`} style={styles.historyItem}>
@@ -216,8 +218,8 @@ export default function EnfermeriaNoteScreen() {
                       <div style={styles.historyAuthor}>Enf. {item.enfermero_nombre || 'No especificado'}</div>
                     </div>
                   </div>
-                  <div style={styles.historyNoteLabel}>Nota</div>
-                  <p style={styles.historyNoteText}>{item.nota || 'Sin contenido'}</p>
+                  <div style={styles.historyNoteLabel}>{t('nursingNote.noteLabel')}</div>
+                  <p style={styles.historyNoteText}>{item.nota || t('nursingNote.noContent')}</p>
                 </article>
               ))
             )}
@@ -227,7 +229,7 @@ export default function EnfermeriaNoteScreen() {
 
       <footer style={styles.footer}>
         <FiShield size={14} />
-        <span>INEO v2.0 - Registro de notas de enfermería</span>
+        <span>{t('nursingNote.footer')}</span>
       </footer>
     </div>
   );

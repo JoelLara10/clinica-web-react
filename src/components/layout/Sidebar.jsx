@@ -1,4 +1,5 @@
 import { useNavigate, useLocation } from 'react-router-dom';
+import { useTranslation } from 'react-i18next';
 import { useAuth } from '../../context/AuthContext';
 import { usePatient } from '../../context/PatientContext';
 import {
@@ -35,7 +36,14 @@ const roleLabels = {
   enfermeria: 'ENFERMERÍA', estudios: 'ESTUDIOS',
 };
 
+const roleLabelsEn = {
+  admin: 'ADMIN', administrativo: 'ADMINISTRATIVE',
+  medico: 'MEDICAL', enfermero: 'NURSING',
+  enfermeria: 'NURSING', estudios: 'STUDIES',
+};
+
 export default function Sidebar({ isOpen, onClose }) {
+  const { t, i18n } = useTranslation();
   const navigate = useNavigate();
   const location = useLocation();
   const { user, logout } = useAuth();
@@ -67,94 +75,95 @@ export default function Sidebar({ isOpen, onClose }) {
   };
 
   const handleLogout = () => {
-    if (window.confirm('¿Estás seguro de que deseas cerrar sesión?')) logout();
+    if (window.confirm(t('sidebar.confirmLogout'))) logout();
   };
 
-  // Construir secciones del menú (igual que móvil)
+  const rl = i18n.language === 'en' ? roleLabelsEn : roleLabels;
+
   const menuSections = [];
 
   const principalItems = [
-    { name: 'Dashboard', icon: 'home-outline', path: '/', requiresPatient: false },
+    { name: t('sidebar.dashboard'), icon: 'home-outline', path: '/', requiresPatient: false },
   ];
 
   if (isMedico || (isAdmin && currentModule === 'medico'))
-    principalItems.push({ name: 'Panel Médico', icon: 'speedometer-outline', path: '/medico', requiresPatient: false });
+    principalItems.push({ name: t('sidebar.medicalPanel'), icon: 'speedometer-outline', path: '/medico', requiresPatient: false });
 
   if (isEnfermeria || (isAdmin && currentModule === 'enfermeria'))
-    principalItems.push({ name: 'Panel Enfermería', icon: 'medkit-outline', path: '/enfermeria', requiresPatient: false });
+    principalItems.push({ name: t('sidebar.nursingPanel'), icon: 'medkit-outline', path: '/enfermeria', requiresPatient: false });
 
   if (isEstudios || (isAdmin && currentModule === 'estudios'))
-    principalItems.push({ name: 'Panel Estudios', icon: 'flask-outline', path: '/estudios', requiresPatient: false });
+    principalItems.push({ name: t('sidebar.studiesPanel'), icon: 'flask-outline', path: '/estudios', requiresPatient: false });
 
-  menuSections.push({ title: 'PRINCIPAL', items: principalItems });
+  menuSections.push({ title: t('sidebar.principal'), items: principalItems });
 
   if (isMedico || (isAdmin && currentModule === 'medico')) {
     menuSections.push({
-      title: 'HISTORIA CLÍNICA',
-      items: [{ name: 'Historia Clínica', icon: 'document-text-outline', path: '/medico/historia-clinica', requiresPatient: true }],
+      title: t('sidebar.clinicalHistory'),
+      items: [{ name: t('sidebar.clinicalHistoryItem'), icon: 'document-text-outline', path: '/medico/historia-clinica', requiresPatient: true }],
     });
     menuSections.push({
-      title: 'NOTAS MÉDICAS',
+      title: t('sidebar.medicalNotes'),
       items: [
-        { name: 'Signos Vitales',           icon: 'heart-outline',         path: '/medico/signos-vitales',   requiresPatient: true },
-        { name: 'Nota Médica (SOAP)',        icon: 'document-text-outline', path: '/medico/nota-medica',      requiresPatient: true },
-        { name: 'Diagnóstico',              icon: 'clipboard-outline',     path: '/medico/diagnostico',      requiresPatient: true },
-        { name: 'Receta',                   icon: 'medkit-outline',        path: '/medico/receta',           requiresPatient: true },
-        { name: 'Exámenes de Laboratorio',  icon: 'flask-outline',         path: '/medico/lab-exams',        requiresPatient: true },
-        { name: 'Exámenes de Gabinete',     icon: 'scan-outline',          path: '/medico/imaging-exams',    requiresPatient: true },
+        { name: t('sidebar.vitalSigns'),           icon: 'heart-outline',         path: '/medico/signos-vitales',   requiresPatient: true },
+        { name: t('sidebar.medicalNote'),        icon: 'document-text-outline', path: '/medico/nota-medica',      requiresPatient: true },
+        { name: t('sidebar.diagnosis'),              icon: 'clipboard-outline',     path: '/medico/diagnostico',      requiresPatient: true },
+        { name: t('sidebar.prescription'),                   icon: 'medkit-outline',        path: '/medico/receta',           requiresPatient: true },
+        { name: t('sidebar.labExams'),  icon: 'flask-outline',         path: '/medico/lab-exams',        requiresPatient: true },
+        { name: t('sidebar.imagingExams'),     icon: 'scan-outline',          path: '/medico/imaging-exams',    requiresPatient: true },
       ],
     });
     menuSections.push({
-      title: 'DOCUMENTOS',
+      title: t('sidebar.documents'),
       items: [
-        { name: 'Imprimir Documentos',    icon: 'print-outline',         path: '/medico/imprimir',   requiresPatient: true },
-        { name: 'Resultados de Estudios', icon: 'document-text-outline', path: '/medico/resultados', requiresPatient: true },
+        { name: t('sidebar.printDocs'),    icon: 'print-outline',         path: '/medico/imprimir',   requiresPatient: true },
+        { name: t('sidebar.studyResults'), icon: 'document-text-outline', path: '/medico/resultados', requiresPatient: true },
       ],
     });
   }
 
   if (isEnfermeria || (isAdmin && currentModule === 'enfermeria')) {
     menuSections.push({
-      title: 'NOTAS DE ENFERMERÍA',
+      title: t('sidebar.nursingNotes'),
       items: [
-        { name: 'Signos Vitales',              icon: 'heart-outline',         path: '/enfermeria/signos-vitales', requiresPatient: true },
-        { name: 'Nota de Enfermería',          icon: 'document-text-outline', path: '/enfermeria/nota',           requiresPatient: true },
-        { name: 'Administración Medicamentos', icon: 'medkit-outline',        path: '/enfermeria/medicamentos',   requiresPatient: true },
-        { name: 'Valoración de Enfermería',    icon: 'clipboard-outline',     path: '/enfermeria/valoracion',     requiresPatient: true },
-        { name: 'Balance Hídrico',             icon: 'water-outline',         path: '/enfermeria/balance-hidrico', requiresPatient: true },
-        { name: 'Cuidados de Enfermería',      icon: 'shield-checkmark-outline', path: '/enfermeria/cuidados',     requiresPatient: true },
+        { name: t('sidebar.vitalSigns'),              icon: 'heart-outline',         path: '/enfermeria/signos-vitales', requiresPatient: true },
+        { name: t('sidebar.nursingNote'),          icon: 'document-text-outline', path: '/enfermeria/nota',           requiresPatient: true },
+        { name: t('sidebar.medicationAdmin'), icon: 'medkit-outline',        path: '/enfermeria/medicamentos',   requiresPatient: true },
+        { name: t('sidebar.nursingAssessment'),    icon: 'clipboard-outline',     path: '/enfermeria/valoracion',     requiresPatient: true },
+        { name: t('sidebar.fluidBalance'),             icon: 'water-outline',         path: '/enfermeria/balance-hidrico', requiresPatient: true },
+        { name: t('sidebar.nursingCare'),      icon: 'shield-checkmark-outline', path: '/enfermeria/cuidados',     requiresPatient: true },
       ],
     });
   }
 
   if (isEstudios || isAdmin) {
     menuSections.push({
-      title: 'ESTUDIOS',
+      title: t('sidebar.studies'),
       items: [
-        { name: 'Solicitudes Lab',      icon: 'flask-outline',         path: '/estudios?section=solicitudes_lab', requiresPatient: false },
-        { name: 'Solicitudes Gabinete', icon: 'scan-outline',          path: '/estudios?section=solicitudes_gab', requiresPatient: false },
-        { name: 'Resultados Lab',       icon: 'document-text-outline', path: '/estudios?section=resultados_lab',  requiresPatient: false },
-        { name: 'Resultados Gabinete',  icon: 'folder-open-outline',   path: '/estudios?section=resultados_gab',  requiresPatient: false },
+        { name: t('sidebar.labRequests'),      icon: 'flask-outline',         path: '/estudios?section=solicitudes_lab', requiresPatient: false },
+        { name: t('sidebar.imagingRequests'), icon: 'scan-outline',          path: '/estudios?section=solicitudes_gab', requiresPatient: false },
+        { name: t('sidebar.labResults'),       icon: 'document-text-outline', path: '/estudios?section=resultados_lab',  requiresPatient: false },
+        { name: t('sidebar.imagingResults'),  icon: 'folder-open-outline',   path: '/estudios?section=resultados_gab',  requiresPatient: false },
       ],
     });
   }
 
   const moduleItems = [];
   if (isAdmin || role === 'administrativo')
-    moduleItems.push({ name: 'Administración', icon: 'settings-outline', path: '/admin',       requiresPatient: false });
+    moduleItems.push({ name: t('sidebar.administration'), icon: 'settings-outline', path: '/admin',       requiresPatient: false });
   if (isAdmin || isMedico)
-    moduleItems.push({ name: 'Médico',         icon: 'pulse-outline',    path: '/medico',      requiresPatient: false });
+    moduleItems.push({ name: t('sidebar.medical'),         icon: 'pulse-outline',    path: '/medico',      requiresPatient: false });
   if (isAdmin || isEnfermeria)
-    moduleItems.push({ name: 'Enfermería',     icon: 'medkit-outline',   path: '/enfermeria',  requiresPatient: false });
+    moduleItems.push({ name: t('sidebar.nursing'),     icon: 'medkit-outline',   path: '/enfermeria',  requiresPatient: false });
   if (isAdmin || isEstudios)
-    moduleItems.push({ name: 'Estudios',       icon: 'flask-outline',    path: '/estudios',    requiresPatient: false });
+    moduleItems.push({ name: t('sidebar.studies').charAt(0) + t('sidebar.studies').slice(1).toLowerCase(),       icon: 'flask-outline',    path: '/estudios',    requiresPatient: false });
   if (isAdmin)
-    moduleItems.push({ name: 'Configuración',  icon: 'options-outline',  path: '/config',      requiresPatient: false });
+    moduleItems.push({ name: t('sidebar.config'),  icon: 'options-outline',  path: '/config',      requiresPatient: false });
 
-  if (moduleItems.length) menuSections.push({ title: 'MÓDULOS', items: moduleItems });
+  if (moduleItems.length) menuSections.push({ title: t('sidebar.modules'), items: moduleItems });
 
   const userPrefix = isEnfermeria ? 'Enf.' : 'Dr.';
-  const roleLabel = roleLabels[role] || 'USUARIO';
+  const roleLabel = rl[role] || 'USER';
 
   return (
     <aside className={`sidebar ${isOpen ? 'open' : ''}`}>
@@ -187,7 +196,7 @@ export default function Sidebar({ isOpen, onClose }) {
                   className={`nav-item ${active ? 'active' : ''} ${!enabled ? 'disabled' : ''}`}
                   onClick={() => {
                     if (enabled) handleNav(item.path);
-                    else alert('Seleccione un paciente primero');
+                    else alert(t('sidebar.selectPatientFirst'));
                   }}
                 >
                   <Icon name={item.icon} color={!enabled ? '#a0aec0' : active ? '#667eea' : '#718096'} />
@@ -202,7 +211,7 @@ export default function Sidebar({ isOpen, onClose }) {
       {/* Logout */}
       <button className="logout-btn" onClick={handleLogout}>
         <FiLogOut size={20} color="#e53e3e" />
-        <span>Cerrar sesión</span>
+        <span>{t('sidebar.logout')}</span>
       </button>
     </aside>
   );

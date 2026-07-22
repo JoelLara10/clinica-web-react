@@ -4,10 +4,9 @@ import { FiArrowLeft, FiChevronDown, FiChevronUp, FiClock, FiPlus, FiRefreshCw, 
 import { MdMedication } from 'react-icons/md';
 import { usePatient } from '../../context/PatientContext';
 import api from '../../services/api';
+import { useTranslation } from 'react-i18next';
 import moment from 'moment';
 import 'moment/locale/es';
-
-moment.locale('es');
 
 const CACHE_PREFIX = 'ineo_web_cache_medico_prescriptions_';
 const CACHE_TTL = 2 * 60 * 1000;
@@ -48,6 +47,8 @@ function setCachedValue(key, data, ttl = CACHE_TTL) {
 }
 
 export default function PrescriptionScreen() {
+  const { t, i18n } = useTranslation();
+  moment.locale(i18n.language === 'en' ? 'en' : 'es');
   const navigate = useNavigate();
   const location = useLocation();
   const { selectedPatient } = usePatient();
@@ -64,7 +65,7 @@ export default function PrescriptionScreen() {
 
   useEffect(() => {
     if (!idAtencion) {
-      setErrorMessage('Selecciona un paciente antes de generar una receta médica.');
+      setErrorMessage(t('prescription.selectPatientFirst'));
       return;
     }
 
@@ -120,7 +121,7 @@ export default function PrescriptionScreen() {
 
   const removeMedication = (id) => {
     if (medications.length === 1) {
-      window.alert('Debe existir al menos un medicamento en la receta.');
+      window.alert(t('prescription.minOneMedicationAlert'));
       return;
     }
     setMedications((current) => current.filter((item) => item.id !== id));
@@ -133,7 +134,7 @@ export default function PrescriptionScreen() {
   const handleSubmit = async () => {
     const validMedications = medications.filter((item) => item.medicamento.trim() !== '');
     if (validMedications.length === 0) {
-      window.alert('Agrega al menos un medicamento antes de guardar la receta.');
+      window.alert(t('prescription.minOneMedication'));
       return;
     }
 
@@ -145,7 +146,7 @@ export default function PrescriptionScreen() {
       await reloadHistory();
     } catch (error) {
       console.error('Error saving prescription:', error);
-      window.alert(error.response?.data?.error || 'No se pudo guardar la receta médica');
+      window.alert(error.response?.data?.error || t('prescription.saveError'));
     } finally {
       setLoading(false);
     }
@@ -157,7 +158,7 @@ export default function PrescriptionScreen() {
         <button type="button" onClick={() => navigate(-1)} style={styles.headerButton}><FiArrowLeft size={20} /></button>
         <div>
           <div style={styles.headerEyebrow}>MÉDICO</div>
-          <h1 style={styles.headerTitle}>Receta Médica</h1>
+          <h1 style={styles.headerTitle}>{t('prescription.title')}</h1>
         </div>
         <button type="button" onClick={reloadHistory} style={styles.headerActionButton} disabled={!idAtencion || loadingHistory}><FiRefreshCw size={18} /></button>
       </div>
@@ -165,7 +166,7 @@ export default function PrescriptionScreen() {
       <section style={styles.patientCard}>
         <div style={styles.patientAvatar}><FiUser size={30} color="#fff" /></div>
         <div>
-          <h2 style={styles.patientName}>Paciente seleccionado</h2>
+          <h2 style={styles.patientName}>{t('prescription.selectedPatient')}</h2>
           <p style={styles.patientMeta}>{patientLabel}</p>
         </div>
       </section>
@@ -173,61 +174,61 @@ export default function PrescriptionScreen() {
       {errorMessage ? <div style={styles.errorCard}>{errorMessage}</div> : null}
 
       <section style={styles.mainCard}>
-        <div style={styles.cardHeader}><MdMedication size={22} /><strong>Nueva Prescripción</strong></div>
+        <div style={styles.cardHeader}><MdMedication size={22} /><strong>{t('prescription.newPrescription')}</strong></div>
         <div style={styles.cardBody}>
           {medications.map((medication, index) => (
             <article key={medication.id} style={styles.medicationCard}>
               <div style={styles.medicationHeader}>
                 <div>
-                  <div style={styles.medicationTag}>Medicamento #{index + 1}</div>
-                  <strong style={styles.medicationTitle}>{medication.medicamento || 'Sin nombre aún'}</strong>
+                  <div style={styles.medicationTag}>{t('prescription.medication')} #{index + 1}</div>
+                  <strong style={styles.medicationTitle}>{medication.medicamento || t('prescription.medicamentoSinNombre')}</strong>
                 </div>
                 {medications.length > 1 ? (
                   <button type="button" onClick={() => removeMedication(medication.id)} style={styles.deleteButton}>
-                    <FiTrash2 size={16} /> Eliminar
+                    <FiTrash2 size={16} /> {t('common.delete')}
                   </button>
                 ) : null}
               </div>
               <div style={styles.formGrid}>
                 <label style={styles.fieldGroup}>
-                  <span style={styles.fieldLabel}>Medicamento *</span>
-                  <input style={styles.fieldInput} value={medication.medicamento} placeholder="Ej: Paracetamol" onChange={(event) => updateMedication(medication.id, 'medicamento', event.target.value)} />
+                  <span style={styles.fieldLabel}>{t('prescription.medication')}</span>
+                  <input style={styles.fieldInput} value={medication.medicamento} placeholder={t('prescription.medicationPlaceholder')} onChange={(event) => updateMedication(medication.id, 'medicamento', event.target.value)} />
                 </label>
                 <label style={styles.fieldGroup}>
-                  <span style={styles.fieldLabel}>Dosis</span>
-                  <input style={styles.fieldInput} value={medication.dosis} placeholder="Ej: 500 mg" onChange={(event) => updateMedication(medication.id, 'dosis', event.target.value)} />
+                  <span style={styles.fieldLabel}>{t('prescription.dose')}</span>
+                  <input style={styles.fieldInput} value={medication.dosis} placeholder={t('prescription.dosePlaceholder')} onChange={(event) => updateMedication(medication.id, 'dosis', event.target.value)} />
                 </label>
                 <label style={styles.fieldGroup}>
-                  <span style={styles.fieldLabel}>Frecuencia</span>
-                  <input style={styles.fieldInput} value={medication.frecuencia} placeholder="Ej: Cada 8 horas" onChange={(event) => updateMedication(medication.id, 'frecuencia', event.target.value)} />
+                  <span style={styles.fieldLabel}>{t('prescription.frequency')}</span>
+                  <input style={styles.fieldInput} value={medication.frecuencia} placeholder={t('prescription.frequencyPlaceholder')} onChange={(event) => updateMedication(medication.id, 'frecuencia', event.target.value)} />
                 </label>
                 <label style={styles.fieldGroup}>
-                  <span style={styles.fieldLabel}>Duración</span>
-                  <input style={styles.fieldInput} value={medication.duracion} placeholder="Ej: 7 días" onChange={(event) => updateMedication(medication.id, 'duracion', event.target.value)} />
+                  <span style={styles.fieldLabel}>{t('prescription.duration')}</span>
+                  <input style={styles.fieldInput} value={medication.duracion} placeholder={t('prescription.durationPlaceholder')} onChange={(event) => updateMedication(medication.id, 'duracion', event.target.value)} />
                 </label>
               </div>
               <label style={styles.fieldGroup}>
-                <span style={styles.fieldLabel}>Indicaciones</span>
-                <textarea style={styles.textArea} rows={3} value={medication.indicaciones} placeholder="Indicaciones y observaciones para el paciente..." onChange={(event) => updateMedication(medication.id, 'indicaciones', event.target.value)} />
+                <span style={styles.fieldLabel}>{t('prescription.indications')}</span>
+                <textarea style={styles.textArea} rows={3} value={medication.indicaciones} placeholder={t('prescription.indicationsPlaceholder')} onChange={(event) => updateMedication(medication.id, 'indicaciones', event.target.value)} />
               </label>
             </article>
           ))}
 
           <div style={styles.actionsRow}>
-            <button type="button" onClick={addMedication} style={styles.secondaryButton}><FiPlus size={18} /> Agregar medicamento</button>
-            <button type="button" onClick={handleSubmit} style={styles.primaryButton} disabled={!idAtencion || loading}><FiSave size={18} /> {loading ? 'Guardando...' : 'Guardar receta'}</button>
+            <button type="button" onClick={addMedication} style={styles.secondaryButton}><FiPlus size={18} /> {t('prescription.addMedication')}</button>
+            <button type="button" onClick={handleSubmit} style={styles.primaryButton} disabled={!idAtencion || loading}><FiSave size={18} /> {loading ? t('prescription.saving') : t('prescription.save')}</button>
           </div>
         </div>
       </section>
 
       <section style={styles.historyCard}>
         <button type="button" style={styles.historyToggle} onClick={() => setShowHistory((current) => !current)}>
-          <div style={styles.historyTitleRow}><FiClock size={18} /><strong>Historial de Recetas</strong><span style={styles.historyCount}>{history.length} recetas</span></div>
+          <div style={styles.historyTitleRow}><FiClock size={18} /><strong>{t('prescription.history')}</strong><span style={styles.historyCount}>{history.length} {t('prescription.recetas')}</span></div>
           {showHistory ? <FiChevronUp size={18} /> : <FiChevronDown size={18} />}
         </button>
         {showHistory ? (
           <div style={styles.historyBody}>
-            {loadingHistory ? <div style={styles.statusBox}>Cargando historial...</div> : history.length === 0 ? <div style={styles.statusBox}>Aún no hay recetas registradas.</div> : history.map((item, index) => (
+            {loadingHistory ? <div style={styles.statusBox}>{t('prescription.loadingHistory')}</div> : history.length === 0 ? <div style={styles.statusBox}>{t('prescription.noPrescriptions')}</div> : history.map((item, index) => (
               <article key={item.id_receta || `${item.fecha_registro || 'prescription'}-${index}`} style={styles.historyItem}>
                 <div style={styles.historyHeader}>
                   <div style={styles.historyBadge}>{moment(item.fecha_registro).format('DD/MM')}</div>
@@ -239,11 +240,11 @@ export default function PrescriptionScreen() {
                 <div style={styles.historyList}>
                   {(item.medicamentos || []).map((med, medIndex) => (
                     <div key={`${med.medicamento || 'med'}-${medIndex}`} style={styles.historyMedication}>
-                      <div style={styles.historyMedicationName}>{med.medicamento || 'Medicamento sin nombre'}</div>
+                      <div style={styles.historyMedicationName}>{med.medicamento || t('prescription.medicamentoSinNombre')}</div>
                       <div style={styles.historyMedicationMeta}>
-                        {med.dosis ? <span>Dosis: {med.dosis}</span> : null}
-                        {med.frecuencia ? <span>Frecuencia: {med.frecuencia}</span> : null}
-                        {med.duracion ? <span>Duración: {med.duracion}</span> : null}
+                        {med.dosis ? <span>{t('prescription.dosisLabel')} {med.dosis}</span> : null}
+                        {med.frecuencia ? <span>{t('prescription.frecuenciaLabel')} {med.frecuencia}</span> : null}
+                        {med.duracion ? <span>{t('prescription.duracionLabel')} {med.duracion}</span> : null}
                       </div>
                       {med.indicaciones ? <p style={styles.historyMedicationNotes}>{med.indicaciones}</p> : null}
                     </div>
@@ -255,7 +256,7 @@ export default function PrescriptionScreen() {
         ) : null}
       </section>
 
-      <footer style={styles.footer}><FiShield size={14} /><span>INEO v2.0 - Prescripción médica</span></footer>
+      <footer style={styles.footer}><FiShield size={14} /><span>{t('prescription.footer')}</span></footer>
     </div>
   );
 }

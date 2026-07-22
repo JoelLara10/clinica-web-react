@@ -6,8 +6,7 @@ import { usePatient } from '../../context/PatientContext';
 import api from '../../services/api';
 import moment from 'moment';
 import 'moment/locale/es';
-
-moment.locale('es');
+import { useTranslation } from 'react-i18next';
 
 const CACHE_PREFIX = 'ineo_web_cache_enfermeria_medications_';
 const CACHE_TTL = 2 * 60 * 1000;
@@ -50,6 +49,9 @@ function createMedicationItem(id) {
 }
 
 export default function EnfermeriaMedicationsScreen() {
+  const { t, i18n } = useTranslation();
+  moment.locale(i18n.language === 'en' ? 'en' : 'es');
+
   const navigate = useNavigate();
   const location = useLocation();
   const { selectedPatient } = usePatient();
@@ -66,7 +68,7 @@ export default function EnfermeriaMedicationsScreen() {
 
   useEffect(() => {
     if (!idAtencion) {
-      setErrorMessage('Selecciona un paciente antes de registrar medicamentos.');
+      setErrorMessage(t('nursingMeds.selectPatientFirst'));
       return;
     }
 
@@ -126,7 +128,7 @@ export default function EnfermeriaMedicationsScreen() {
 
   const removeMedication = (id) => {
     if (medications.length === 1) {
-      window.alert('Debe tener al menos un medicamento');
+      window.alert(t('nursingMeds.minOneMedicationAlert'));
       return;
     }
 
@@ -142,7 +144,7 @@ export default function EnfermeriaMedicationsScreen() {
   const handleSubmit = async () => {
     const validMedications = medications.filter((medication) => medication.nombre.trim() !== '');
     if (!validMedications.length) {
-      window.alert('Debe agregar al menos un medicamento');
+      window.alert(t('nursingMeds.minOneMedication'));
       return;
     }
 
@@ -159,7 +161,7 @@ export default function EnfermeriaMedicationsScreen() {
       }
     } catch (error) {
       console.error('Error saving medications:', error);
-      window.alert(error.response?.data?.error || 'No se pudo guardar la administración');
+      window.alert(error.response?.data?.error || t('nursingMeds.saveError'));
     } finally {
       setLoading(false);
     }
@@ -172,8 +174,8 @@ export default function EnfermeriaMedicationsScreen() {
           <FiArrowLeft size={20} />
         </button>
         <div>
-          <div style={styles.headerEyebrow}>ENFERMERÍA</div>
-          <h1 style={styles.headerTitle}>Administración de Medicamentos</h1>
+          <div style={styles.headerEyebrow}>{t('nursingMeds.eyebrow')}</div>
+          <h1 style={styles.headerTitle}>{t('nursingMeds.title')}</h1>
         </div>
         <div style={styles.headerSpacer} />
       </div>
@@ -181,7 +183,7 @@ export default function EnfermeriaMedicationsScreen() {
       <section style={styles.patientCard}>
         <div style={styles.patientAvatar}><FiUser size={30} color="#fff" /></div>
         <div>
-          <h2 style={styles.patientName}>Paciente seleccionado</h2>
+          <h2 style={styles.patientName}>{t('nursingMeds.selectedPatient')}</h2>
           <p style={styles.patientMeta}>{patientLabel}</p>
         </div>
       </section>
@@ -191,28 +193,28 @@ export default function EnfermeriaMedicationsScreen() {
       <section style={styles.mainCard}>
         <div style={styles.cardHeader}>
           <MdMedication size={22} />
-          <strong>Registrar Administración</strong>
+          <strong>{t('nursingMeds.registerAdmin')}</strong>
         </div>
 
         <div style={styles.cardBody}>
           {medications.map((medication, index) => (
             <article key={medication.id} style={styles.medicationCard}>
               <div style={styles.medicationHeader}>
-                <strong>Medicamento #{index + 1}</strong>
+                <strong>{t('nursingMeds.medicationNumber', { num: index + 1 })}</strong>
                 {medications.length > 1 ? (
                   <button type="button" style={styles.deleteButton} onClick={() => removeMedication(medication.id)}>
                     <FiTrash2 size={16} />
-                    <span>Eliminar</span>
+                    <span>{t('common.delete')}</span>
                   </button>
                 ) : null}
               </div>
 
               <div style={styles.fieldStack}>
                 <label style={styles.fieldGroup}>
-                  <span style={styles.fieldLabel}>Medicamento *</span>
+                  <span style={styles.fieldLabel}>{t('nursingMeds.medicationName')}</span>
                   <input
                     style={styles.fieldInput}
-                    placeholder="Nombre del medicamento"
+                    placeholder={t('nursingMeds.medicationNamePlaceholder')}
                     value={medication.nombre}
                     onChange={(event) => updateMedication(medication.id, 'nombre', event.target.value)}
                   />
@@ -220,19 +222,19 @@ export default function EnfermeriaMedicationsScreen() {
 
                 <div style={styles.twoColumnRow}>
                   <label style={styles.fieldGroup}>
-                    <span style={styles.fieldLabel}>Dosis</span>
+                    <span style={styles.fieldLabel}>{t('nursingMeds.dose')}</span>
                     <input
                       style={styles.fieldInput}
-                      placeholder="Ej: 500mg"
+                      placeholder={t('nursingMeds.dosePlaceholder')}
                       value={medication.dosis}
                       onChange={(event) => updateMedication(medication.id, 'dosis', event.target.value)}
                     />
                   </label>
                   <label style={styles.fieldGroup}>
-                    <span style={styles.fieldLabel}>Frecuencia</span>
+                    <span style={styles.fieldLabel}>{t('nursingMeds.frequency')}</span>
                     <input
                       style={styles.fieldInput}
-                      placeholder="Ej: Cada 8 horas"
+                      placeholder={t('nursingMeds.frequencyPlaceholder')}
                       value={medication.frecuencia}
                       onChange={(event) => updateMedication(medication.id, 'frecuencia', event.target.value)}
                     />
@@ -241,16 +243,16 @@ export default function EnfermeriaMedicationsScreen() {
 
                 <div style={styles.twoColumnRow}>
                   <label style={styles.fieldGroup}>
-                    <span style={styles.fieldLabel}>Vía</span>
+                    <span style={styles.fieldLabel}>{t('nursingMeds.route')}</span>
                     <input
                       style={styles.fieldInput}
-                      placeholder="Oral, IV, IM"
+                      placeholder={t('nursingMeds.routePlaceholder')}
                       value={medication.via}
                       onChange={(event) => updateMedication(medication.id, 'via', event.target.value)}
                     />
                   </label>
                   <label style={styles.fieldGroup}>
-                    <span style={styles.fieldLabel}>Fecha aplicación</span>
+                    <span style={styles.fieldLabel}>{t('nursingMeds.applicationDate')}</span>
                     <input
                       style={styles.fieldInput}
                       placeholder="DD/MM/YYYY"
@@ -265,13 +267,13 @@ export default function EnfermeriaMedicationsScreen() {
 
           <button type="button" style={styles.addButton} onClick={addMedication}>
             <FiPlus size={18} />
-            <span>Agregar otro medicamento</span>
+            <span>{t('nursingMeds.addAnother')}</span>
           </button>
         </div>
 
         <button type="button" style={styles.saveButton} onClick={handleSubmit} disabled={!idAtencion || loading}>
           <FiSave size={18} />
-          <span>{loading ? 'Guardando...' : 'Registrar Administración'}</span>
+          <span>{loading ? t('nursingMeds.saving') : t('nursingMeds.registerAdmin')}</span>
         </button>
       </section>
 
@@ -279,7 +281,7 @@ export default function EnfermeriaMedicationsScreen() {
         <button type="button" style={styles.historyToggle} onClick={() => setShowHistory((current) => !current)}>
           <div style={styles.historyTitleRow}>
             <FiClock size={18} />
-            <strong>Historial de Administraciones</strong>
+            <strong>{t('nursingMeds.history')}</strong>
             <span style={styles.historyCount}>{history.length} registros</span>
           </div>
           {showHistory ? <FiChevronUp size={18} /> : <FiChevronDown size={18} />}
@@ -288,9 +290,9 @@ export default function EnfermeriaMedicationsScreen() {
         {showHistory ? (
           <div style={styles.historyBody}>
             {loadingHistory ? (
-              <div style={styles.statusBox}>Cargando historial...</div>
+              <div style={styles.statusBox}>{t('nursingMeds.loadingHistory')}</div>
             ) : history.length === 0 ? (
-              <div style={styles.statusBox}>No hay administraciones previas.</div>
+              <div style={styles.statusBox}>{t('nursingMeds.noAdministrations')}</div>
             ) : (
               history.map((item, index) => (
                 <article key={item.id_registro || `${item.fecha_registro || 'med'}-${index}`} style={styles.historyItem}>
@@ -307,10 +309,10 @@ export default function EnfermeriaMedicationsScreen() {
                       <div key={`${medication.nombre || 'med'}-${medIndex}`} style={styles.historyMedicationCard}>
                         <strong style={styles.historyMedicationName}>{medication.nombre}</strong>
                         <div style={styles.historyMedicationMeta}>
-                          {medication.dosis ? <span>Dosis: {medication.dosis}</span> : null}
-                          {medication.frecuencia ? <span>Frecuencia: {medication.frecuencia}</span> : null}
-                          {medication.via ? <span>Vía: {medication.via}</span> : null}
-                          {medication.fecha_aplicacion ? <span>Fecha: {medication.fecha_aplicacion}</span> : null}
+                          {medication.dosis ? <span>{t('nursingMeds.dosisLabel')} {medication.dosis}</span> : null}
+                          {medication.frecuencia ? <span>{t('nursingMeds.frecuenciaLabel')} {medication.frecuencia}</span> : null}
+                          {medication.via ? <span>{t('nursingMeds.viaLabel')} {medication.via}</span> : null}
+                          {medication.fecha_aplicacion ? <span>{t('nursingMeds.fechaLabel')} {medication.fecha_aplicacion}</span> : null}
                         </div>
                       </div>
                     ))}
@@ -324,7 +326,7 @@ export default function EnfermeriaMedicationsScreen() {
 
       <footer style={styles.footer}>
         <FiShield size={14} />
-        <span>INEO v2.0 - Administración de medicamentos</span>
+        <span>{t('nursingMeds.footer')}</span>
       </footer>
     </div>
   );

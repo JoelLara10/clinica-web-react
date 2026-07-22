@@ -4,6 +4,7 @@ import { FiArrowLeft, FiFileText, FiPrinter, FiShield, FiUser } from 'react-icon
 import { MdMedication, MdOutlineScreenshotMonitor } from 'react-icons/md';
 import { usePatient } from '../../context/PatientContext';
 import api from '../../services/api';
+import { useTranslation } from 'react-i18next';
 
 function getPatientName(patientInfo) {
   if (!patientInfo) return 'Paciente';
@@ -11,6 +12,7 @@ function getPatientName(patientInfo) {
 }
 
 export default function PrintDocsScreen() {
+  const { t, i18n } = useTranslation();
   const navigate = useNavigate();
   const location = useLocation();
   const { selectedPatient } = usePatient();
@@ -25,7 +27,7 @@ export default function PrintDocsScreen() {
 
   useEffect(() => {
     if (!idAtencion || !idExp) {
-      setErrorMessage('Selecciona un paciente antes de imprimir documentos.');
+      setErrorMessage(t('printDocs.selectPatientFirst'));
       setLoading(false);
       return;
     }
@@ -39,7 +41,7 @@ export default function PrintDocsScreen() {
         setPatientInfo(response.data?.paciente || null);
       } catch (error) {
         console.error('Error loading patient info for print docs:', error);
-        setErrorMessage('No se pudo cargar la información del paciente.');
+        setErrorMessage(t('printDocs.errorLoading'));
       } finally {
         setLoading(false);
       }
@@ -51,7 +53,7 @@ export default function PrintDocsScreen() {
   const openPdfUrl = (path) => {
     const token = typeof window !== 'undefined' ? window.localStorage.getItem('@ineo_token') : '';
     if (!token) {
-      window.alert('No se encontró sesión activa.');
+      window.alert(t('printDocs.noActiveSession'));
       return false;
     }
     const baseUrl = (api.defaults.baseURL || '').replace(/\/$/, '');
@@ -123,12 +125,12 @@ export default function PrintDocsScreen() {
   };
 
   const printItems = [
-    { id: 'vital-signs', title: 'Signos Vitales', description: 'Último registro disponible', icon: FiFileText, color: '#dc2626', accent: '#fef2f2' },
-    { id: 'medical-note', title: 'Nota Médica', description: 'Formato SOAP del paciente', icon: FiFileText, color: '#2563eb', accent: '#eff6ff' },
-    { id: 'diagnosis', title: 'Diagnóstico', description: 'Diagnóstico actual e historial', icon: FiFileText, color: '#16a34a', accent: '#f0fdf4' },
-    { id: 'prescription', title: 'Receta Médica', description: 'Prescripción más reciente', icon: MdMedication, color: '#ea580c', accent: '#fff7ed' },
-    { id: 'lab-exams', title: 'Exámenes de Laboratorio', description: 'Última solicitud de laboratorio', icon: FiFileText, color: '#0ea5e9', accent: '#f0f9ff' },
-    { id: 'imaging-exams', title: 'Exámenes de Gabinete', description: 'Última solicitud de gabinete', icon: MdOutlineScreenshotMonitor, color: '#7c3aed', accent: '#faf5ff' },
+    { id: 'vital-signs', title: t('printDocs.vitalSigns'), description: t('printDocs.vitalSignsDesc'), icon: FiFileText, color: '#dc2626', accent: '#fef2f2' },
+    { id: 'medical-note', title: t('printDocs.medicalNote'), description: t('printDocs.medicalNoteDesc'), icon: FiFileText, color: '#2563eb', accent: '#eff6ff' },
+    { id: 'diagnosis', title: t('printDocs.diagnosis'), description: t('printDocs.diagnosisDesc'), icon: FiFileText, color: '#16a34a', accent: '#f0fdf4' },
+    { id: 'prescription', title: t('printDocs.prescription'), description: t('printDocs.prescriptionDesc'), icon: MdMedication, color: '#ea580c', accent: '#fff7ed' },
+    { id: 'lab-exams', title: t('printDocs.labExams'), description: t('printDocs.labExamsDesc'), icon: FiFileText, color: '#0ea5e9', accent: '#f0f9ff' },
+    { id: 'imaging-exams', title: t('printDocs.imagingExams'), description: t('printDocs.imagingExamsDesc'), icon: MdOutlineScreenshotMonitor, color: '#7c3aed', accent: '#faf5ff' },
   ];
 
   return (
@@ -137,7 +139,7 @@ export default function PrintDocsScreen() {
         <button type="button" onClick={() => navigate(-1)} style={styles.headerButton}><FiArrowLeft size={20} /></button>
         <div>
           <div style={styles.headerEyebrow}>MÉDICO</div>
-          <h1 style={styles.headerTitle}>Imprimir Documentos</h1>
+          <h1 style={styles.headerTitle}>{t('printDocs.title')}</h1>
         </div>
         <div style={styles.headerSpacer} />
       </div>
@@ -150,9 +152,9 @@ export default function PrintDocsScreen() {
         </div>
       </section>
 
-      {loading ? <div style={styles.loadingCard}>Cargando información del paciente...</div> : errorMessage ? <div style={styles.errorCard}>{errorMessage}</div> : (
+      {loading ? <div style={styles.loadingCard}>{t('printDocs.loading')}</div> : errorMessage ? <div style={styles.errorCard}>{errorMessage}</div> : (
         <section style={styles.mainCard}>
-          <div style={styles.cardHeader}><FiPrinter size={20} /><strong>Selecciona el documento a imprimir</strong></div>
+          <div style={styles.cardHeader}><FiPrinter size={20} /><strong>{t('printDocs.selectDoc')}</strong></div>
           <div style={styles.cardBody}>
             <div style={styles.grid}>
               {printItems.map((item) => {
@@ -165,17 +167,17 @@ export default function PrintDocsScreen() {
                       <strong style={{ ...styles.printTitle, color: item.color }}>{item.title}</strong>
                       <span style={styles.printDescription}>{item.description}</span>
                     </div>
-                    <span style={{ ...styles.printAction, color: item.color }}>{isBusy ? 'Preparando...' : 'Imprimir'}</span>
+                    <span style={{ ...styles.printAction, color: item.color }}>{isBusy ? t('printDocs.preparing') : t('printDocs.print')}</span>
                   </button>
                 );
               })}
             </div>
-            <div style={styles.noteBox}>Los documentos se abrirán en una nueva pestaña como PDF listos para impresión.</div>
+            <div style={styles.noteBox}>{t('printDocs.docsNote')}</div>
           </div>
         </section>
       )}
 
-      <footer style={styles.footer}><FiShield size={14} /><span>INEO v2.0 - Impresión de documentos</span></footer>
+      <footer style={styles.footer}><FiShield size={14} /><span>{t('printDocs.footer')}</span></footer>
     </div>
   );
 }

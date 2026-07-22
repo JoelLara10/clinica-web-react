@@ -3,6 +3,7 @@ import { useLocation, useNavigate } from 'react-router-dom';
 import { FiArrowLeft, FiCheckCircle, FiClipboard, FiRefreshCw, FiSave, FiShield, FiUser } from 'react-icons/fi';
 import { usePatient } from '../../context/PatientContext';
 import api from '../../services/api';
+import { useTranslation } from 'react-i18next';
 
 const CACHE_PREFIX = 'ineo_web_cache_historia_clinica_';
 const CACHE_TTL = 5 * 60 * 1000;
@@ -38,6 +39,7 @@ function setCachedValue(key, data, ttl = CACHE_TTL) {
 }
 
 export default function HistoriaClinicaScreen() {
+  const { t, i18n } = useTranslation();
   const navigate = useNavigate();
   const location = useLocation();
   const { selectedPatient } = usePatient();
@@ -54,7 +56,7 @@ export default function HistoriaClinicaScreen() {
 
   useEffect(() => {
     if (!idAtencion || !idExp) {
-      setErrorMessage('Selecciona un paciente antes de abrir historia clínica.');
+      setErrorMessage(t('historiaClinica.selectPatientFirst'));
       return;
     }
     setErrorMessage('');
@@ -114,7 +116,7 @@ export default function HistoriaClinicaScreen() {
 
   const handleSubmit = async () => {
     if (!formData.motivo_consulta.trim()) {
-      window.alert('El motivo de consulta es requerido');
+      window.alert(t('historiaClinica.motivoRequired'));
       return;
     }
     setLoading(true);
@@ -163,7 +165,7 @@ export default function HistoriaClinicaScreen() {
       }
     } catch (error) {
       console.error('Error saving historia clinica:', error);
-      window.alert(error.response?.data?.error || 'No se pudo guardar la historia clínica');
+      window.alert(error.response?.data?.error || t('historiaClinica.saveError'));
     } finally {
       setLoading(false);
     }
@@ -193,38 +195,38 @@ export default function HistoriaClinicaScreen() {
         <button type="button" onClick={() => navigate(-1)} style={styles.headerButton}><FiArrowLeft size={20} /></button>
         <div>
           <div style={styles.headerEyebrow}>MÉDICO</div>
-          <h1 style={styles.headerTitle}>Historia Clínica</h1>
+          <h1 style={styles.headerTitle}>{t('historiaClinica.title')}</h1>
         </div>
         <button type="button" onClick={reloadData} style={styles.headerActionButton} disabled={!idAtencion || !idExp || loadingData}><FiRefreshCw size={18} /></button>
       </div>
 
       {errorMessage ? <div style={styles.errorCard}>{errorMessage}</div> : null}
 
-      {loadingData ? <div style={styles.loadingCard}>Cargando historia clínica...</div> : (
+      {loadingData ? <div style={styles.loadingCard}>{t('historiaClinica.loadingData')}</div> : (
         <section style={styles.mainCard}>
           <div style={styles.cardHeader}><FiUser size={20} /><strong>{patientLabel}</strong></div>
           <div style={styles.cardBody}>
             <section style={styles.sectionBox}>
-              <div style={styles.sectionHeader}><FiClipboard size={18} color="#667eea" /><strong>Motivo de consulta</strong></div>
-              <textarea style={styles.textArea} placeholder="Describa el motivo de la consulta..." value={formData.motivo_consulta} onChange={(event) => handleChange('motivo_consulta', event.target.value)} rows={3} />
+              <div style={styles.sectionHeader}><FiClipboard size={18} color="#667eea" /><strong>{t('historiaClinica.motivoConsulta')}</strong></div>
+              <textarea style={styles.textArea} placeholder={t('historiaClinica.motivoPlaceholder')} value={formData.motivo_consulta} onChange={(event) => handleChange('motivo_consulta', event.target.value)} rows={3} />
             </section>
-            {renderCheckboxGroup('Sintomatología Ocular', sintomasOptions, 'sintomatologia')}
-            {renderCheckboxGroup('Antecedentes Heredofamiliares', heredoOptions, 'heredo')}
-            {renderCheckboxGroup('Antecedentes Personales No Patológicos', nopatOptions, 'nopat')}
+            {renderCheckboxGroup(t('historiaClinica.sintomatologiaOcular'), sintomasOptions, 'sintomatologia')}
+            {renderCheckboxGroup(t('historiaClinica.antecedentesHeredo'), heredoOptions, 'heredo')}
+            {renderCheckboxGroup(t('historiaClinica.antecedentesNoPat'), nopatOptions, 'nopat')}
             <section style={styles.sectionBox}>
-              <div style={styles.sectionHeader}><FiClipboard size={18} color="#667eea" /><strong>Antecedentes Patológicos</strong></div>
-              <input style={styles.input} placeholder="Enfermedades" value={formData.pat_enfermedades} onChange={(event) => handleChange('pat_enfermedades', event.target.value)} />
-              <input style={styles.input} placeholder="Medicamentos" value={formData.pat_medicamentos} onChange={(event) => handleChange('pat_medicamentos', event.target.value)} />
-              <input style={styles.input} placeholder="Alergias" value={formData.pat_alergias} onChange={(event) => handleChange('pat_alergias', event.target.value)} />
-              <input style={styles.input} placeholder="Antecedentes oculares" value={formData.pat_oculares} onChange={(event) => handleChange('pat_oculares', event.target.value)} />
-              <input style={styles.input} placeholder="Cirugías previas" value={formData.pat_cirugias} onChange={(event) => handleChange('pat_cirugias', event.target.value)} />
+              <div style={styles.sectionHeader}><FiClipboard size={18} color="#667eea" /><strong>{t('historiaClinica.antecedentesPat')}</strong></div>
+              <input style={styles.input} placeholder={t('historiaClinica.enfermedades')} value={formData.pat_enfermedades} onChange={(event) => handleChange('pat_enfermedades', event.target.value)} />
+              <input style={styles.input} placeholder={t('historiaClinica.medicamentos')} value={formData.pat_medicamentos} onChange={(event) => handleChange('pat_medicamentos', event.target.value)} />
+              <input style={styles.input} placeholder={t('historiaClinica.alergias')} value={formData.pat_alergias} onChange={(event) => handleChange('pat_alergias', event.target.value)} />
+              <input style={styles.input} placeholder={t('historiaClinica.antecedentesOculares')} value={formData.pat_oculares} onChange={(event) => handleChange('pat_oculares', event.target.value)} />
+              <input style={styles.input} placeholder={t('historiaClinica.cirugiasPrevias')} value={formData.pat_cirugias} onChange={(event) => handleChange('pat_cirugias', event.target.value)} />
             </section>
           </div>
-          <div style={styles.cardFooter}><button type="button" style={styles.cancelButton} onClick={() => navigate(-1)}>Cancelar</button><button type="button" style={styles.saveButton} onClick={handleSubmit} disabled={!idAtencion || loading}><FiSave size={18} /><span>{loading ? 'Guardando...' : 'Guardar Historia Clínica'}</span></button></div>
+          <div style={styles.cardFooter}><button type="button" style={styles.cancelButton} onClick={() => navigate(-1)}>{t('historiaClinica.cancel')}</button><button type="button" style={styles.saveButton} onClick={handleSubmit} disabled={!idAtencion || loading}><FiSave size={18} /><span>{loading ? t('historiaClinica.saving') : t('historiaClinica.save')}</span></button></div>
         </section>
       )}
 
-      <footer style={styles.footer}><FiShield size={14} /><span>INEO v2.0 - Historia clínica</span></footer>
+      <footer style={styles.footer}><FiShield size={14} /><span>{t('historiaClinica.footer')}</span></footer>
     </div>
   );
 }

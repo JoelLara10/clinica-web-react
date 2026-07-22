@@ -1,10 +1,12 @@
 import React, { useState } from 'react';
+import { useTranslation } from 'react-i18next';
 import { useAuth } from '../../context/AuthContext';
 import { FiUser, FiLock, FiEye, FiEyeOff, FiArrowRight } from 'react-icons/fi';
 import { MdLocalHospital } from 'react-icons/md';
 import './LoginScreen.css';
 
 const LoginScreen = () => {
+  const { t, i18n } = useTranslation();
   const [username, setUsername] = useState('');
   const [password, setPassword] = useState('');
   const [showPassword, setShowPassword] = useState(false);
@@ -12,28 +14,52 @@ const LoginScreen = () => {
   const [errorMsg, setErrorMsg] = useState('');
   const { login } = useAuth();
 
+  const changeLanguage = (lng) => {
+    i18n.changeLanguage(lng);
+    localStorage.setItem('@ineo_lang', lng);
+  };
+
   const handleLogin = async () => {
     if (!username.trim() || !password.trim()) {
-      setErrorMsg('Por favor ingresa usuario y contraseña');
+      setErrorMsg(t('login.errorEmptyFields'));
       return;
     }
     setLoading(true);
     setErrorMsg('');
     const result = await login(username, password);
     setLoading(false);
-    if (!result.success) setErrorMsg(result.error || 'Credenciales incorrectas');
-    // ✅ La navegación la maneja el router automáticamente cuando user cambia
+    if (!result.success) setErrorMsg(result.error || t('login.errorCredentials'));
   };
+
+  const currentLang = i18n.language;
 
   return (
     <div className="login-container">
+      {/* Language Switcher */}
+      <div className="lang-switcher">
+        <button
+          className={`lang-btn ${currentLang === 'es' ? 'lang-btn-active' : ''}`}
+          onClick={() => changeLanguage('es')}
+          type="button"
+        >
+          ES
+        </button>
+        <button
+          className={`lang-btn ${currentLang === 'en' ? 'lang-btn-active' : ''}`}
+          onClick={() => changeLanguage('en')}
+          type="button"
+        >
+          EN
+        </button>
+      </div>
+
       {/* Brand */}
       <div className="brand-container">
         <div className="icon-container">
           <MdLocalHospital size={70} color="#fff" />
         </div>
         <h1 className="brand-title">INEO</h1>
-        <p className="brand-subtitle">Sistema de Gestión Hospitalaria</p>
+        <p className="brand-subtitle">{t('login.brandSubtitle')}</p>
       </div>
 
       {/* Form */}
@@ -42,7 +68,7 @@ const LoginScreen = () => {
           <FiUser size={22} color="#667eea" />
           <input
             className="input"
-            placeholder="Usuario"
+            placeholder={t('login.username')}
             value={username}
             onChange={(e) => setUsername(e.target.value)}
             onKeyDown={(e) => e.key === 'Enter' && handleLogin()}
@@ -55,7 +81,7 @@ const LoginScreen = () => {
           <FiLock size={22} color="#667eea" />
           <input
             className="input"
-            placeholder="Contraseña"
+            placeholder={t('login.password')}
             type={showPassword ? 'text' : 'password'}
             value={password}
             onChange={(e) => setPassword(e.target.value)}
@@ -75,14 +101,14 @@ const LoginScreen = () => {
             <span className="spinner" />
           ) : (
             <>
-              <span>Iniciar Sesión</span>
+              <span>{t('login.loginButton')}</span>
               <FiArrowRight size={22} color="#fff" />
             </>
           )}
         </button>
       </div>
 
-      <p className="footer-text">INEO v2.0 - Sistema de Gestión Hospitalaria</p>
+      <p className="footer-text">{t('login.footer')}</p>
     </div>
   );
 };

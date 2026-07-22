@@ -5,12 +5,15 @@ import { usePatient } from '../../context/PatientContext';
 import api from '../../services/api';
 import moment from 'moment';
 import 'moment/locale/es';
+import { useTranslation } from 'react-i18next';
 
 moment.locale('es');
 
 const CARE_STATES = ['EN_PROCESO', 'PENDIENTE', 'COMPLETADO'];
 
 export default function EnfermeriaCareScreen() {
+  const { t, i18n } = useTranslation();
+  moment.locale(i18n.language === 'en' ? 'en' : 'es');
   const navigate = useNavigate();
   const location = useLocation();
   const { selectedPatient } = usePatient();
@@ -66,10 +69,10 @@ export default function EnfermeriaCareScreen() {
         observaciones: '',
       });
       await loadHistory();
-      window.alert('Cuidados de enfermería guardados correctamente');
+      window.alert(t('nursingCare.saveSuccess'));
     } catch (error) {
       console.error('Error saving nursing care:', error);
-      window.alert(error.response?.data?.error || 'No se pudo guardar el cuidado de enfermería');
+      window.alert(error.response?.data?.error || t('nursingCare.saveError'));
     } finally {
       setLoading(false);
     }
@@ -82,8 +85,8 @@ export default function EnfermeriaCareScreen() {
           <FiArrowLeft size={20} />
         </button>
         <div>
-          <div style={styles.headerEyebrow}>ENFERMERÍA</div>
-          <h1 style={styles.headerTitle}>Cuidados de Enfermería</h1>
+          <div style={styles.headerEyebrow}>{t('nursingCare.eyebrow')}</div>
+          <h1 style={styles.headerTitle}>{t('nursingCare.title')}</h1>
         </div>
         <div style={styles.headerSpacer} />
       </div>
@@ -91,28 +94,28 @@ export default function EnfermeriaCareScreen() {
       <section style={styles.patientCard}>
         <div style={styles.patientAvatar}><FiUser size={30} color="#fff" /></div>
         <div>
-          <h2 style={styles.patientName}>Paciente seleccionado</h2>
+          <h2 style={styles.patientName}>{t('nursingCare.selectedPatient')}</h2>
           <p style={styles.patientMeta}>{patientLabel}</p>
         </div>
       </section>
 
       <section style={styles.mainCard}>
         <div style={styles.formGrid}>
-          <textarea style={styles.textArea} rows={3} placeholder="Diagnóstico de enfermería" value={formData.diagnostico_enfermeria} onChange={(e) => handleChange('diagnostico_enfermeria', e.target.value)} />
-          <textarea style={styles.textArea} rows={3} placeholder="Objetivos" value={formData.objetivos} onChange={(e) => handleChange('objetivos', e.target.value)} />
-          <textarea style={styles.textArea} rows={3} placeholder="Intervenciones" value={formData.intervenciones} onChange={(e) => handleChange('intervenciones', e.target.value)} />
-          <textarea style={styles.textArea} rows={3} placeholder="Evaluación" value={formData.evaluacion} onChange={(e) => handleChange('evaluacion', e.target.value)} />
+          <textarea style={styles.textArea} rows={3} placeholder={t('nursingCare.nursingDiagnosisPlaceholder')} value={formData.diagnostico_enfermeria} onChange={(e) => handleChange('diagnostico_enfermeria', e.target.value)} />
+          <textarea style={styles.textArea} rows={3} placeholder={t('nursingCare.objectivesPlaceholder')} value={formData.objetivos} onChange={(e) => handleChange('objetivos', e.target.value)} />
+          <textarea style={styles.textArea} rows={3} placeholder={t('nursingCare.interventionsPlaceholder')} value={formData.intervenciones} onChange={(e) => handleChange('intervenciones', e.target.value)} />
+          <textarea style={styles.textArea} rows={3} placeholder={t('nursingCare.evaluationPlaceholder')} value={formData.evaluacion} onChange={(e) => handleChange('evaluacion', e.target.value)} />
         </div>
         <select style={styles.input} value={formData.estado} onChange={(e) => handleChange('estado', e.target.value)}>
           {CARE_STATES.map((state) => <option key={state} value={state}>{state.replace('_', ' ')}</option>)}
         </select>
-        <textarea style={styles.textArea} rows={3} placeholder="Observaciones" value={formData.observaciones} onChange={(e) => handleChange('observaciones', e.target.value)} />
+        <textarea style={styles.textArea} rows={3} placeholder={t('nursingCare.observationsPlaceholder')} value={formData.observaciones} onChange={(e) => handleChange('observaciones', e.target.value)} />
         <div style={styles.buttonRow}>
           <button type="button" style={styles.secondaryButton} onClick={loadHistory} disabled={loadingHistory}>
-            <FiRefreshCw size={16} /> Recargar
+            <FiRefreshCw size={16} /> {t('nursingCare.reload')}
           </button>
           <button type="button" style={styles.primaryButton} onClick={handleSubmit} disabled={!idAtencion || loading}>
-            <FiSave size={16} /> {loading ? 'Guardando...' : 'Guardar cuidado'}
+            <FiSave size={16} /> {loading ? t('nursingCare.saving') : t('nursingCare.save')}
           </button>
         </div>
       </section>
@@ -120,21 +123,21 @@ export default function EnfermeriaCareScreen() {
       <section style={styles.historyCard}>
         <div style={styles.historyHeader}>
           <FiClock size={16} />
-          <strong>Historial</strong>
+          <strong>{t('nursingCare.history')}</strong>
           <span style={styles.count}>{history.length}</span>
         </div>
-        {loadingHistory ? <div style={styles.status}>Cargando...</div> : history.length === 0 ? (
-          <div style={styles.status}>Sin registros</div>
+        {loadingHistory ? <div style={styles.status}>{t('nursingCare.loading')}</div> : history.length === 0 ? (
+          <div style={styles.status}>{t('nursingCare.noRecords')}</div>
         ) : (
           history.map((item, index) => (
             <article key={item.id_cuidado || index} style={styles.historyItem}>
-              <div style={styles.historyDate}>{moment(item.fecha_registro).format('DD/MM/YYYY HH:mm')} - Enf. {item.enfermero_nombre || 'No especificado'}</div>
+              <div style={styles.historyDate}>{moment(item.fecha_registro).format('DD/MM/YYYY HH:mm')} - Enf. {item.enfermero_nombre || t('nursingCare.notSpecified')}</div>
               <div style={styles.historyText}>Estado: {item.estado || 'EN_PROCESO'}</div>
-              <div style={styles.historyText}>Diagnóstico: {item.diagnostico_enfermeria || 'N/A'}</div>
-              <div style={styles.historyText}>Objetivos: {item.objetivos || 'N/A'}</div>
-              <div style={styles.historyText}>Intervenciones: {item.intervenciones || 'N/A'}</div>
-              <div style={styles.historyText}>Evaluación: {item.evaluacion || 'N/A'}</div>
-              <div style={styles.historyText}>Observaciones: {item.observaciones || 'Sin observaciones'}</div>
+              <div style={styles.historyText}>{t('nursingCare.diagnosisLabel') + ' '}{item.diagnostico_enfermeria || 'N/A'}</div>
+              <div style={styles.historyText}>{t('nursingCare.objectivesLabel') + ' '}{item.objetivos || 'N/A'}</div>
+              <div style={styles.historyText}>{t('nursingCare.interventionsLabel') + ' '}{item.intervenciones || 'N/A'}</div>
+              <div style={styles.historyText}>{t('nursingCare.evaluationLabel') + ' '}{item.evaluacion || 'N/A'}</div>
+              <div style={styles.historyText}>{t('nursingCare.observationsLabel') + ' '}{item.observaciones || t('nursingCare.noObservations')}</div>
             </article>
           ))
         )}
@@ -142,7 +145,7 @@ export default function EnfermeriaCareScreen() {
 
       <footer style={styles.footer}>
         <FiShield size={14} />
-        <span>INEO v2.0 - Cuidados de enfermería</span>
+        <span>{t('nursingCare.footer')}</span>
       </footer>
     </div>
   );

@@ -5,8 +5,7 @@ import { usePatient } from '../../context/PatientContext';
 import api from '../../services/api';
 import moment from 'moment';
 import 'moment/locale/es';
-
-moment.locale('es');
+import { useTranslation } from 'react-i18next';
 
 const CACHE_PREFIX = 'ineo_web_cache_medical_notes_';
 const CACHE_TTL = 2 * 60 * 1000;
@@ -38,6 +37,7 @@ function setCachedValue(key, data, ttl = CACHE_TTL) {
 }
 
 export default function MedicalNoteScreen() {
+  const { t, i18n } = useTranslation();
   const navigate = useNavigate();
   const location = useLocation();
   const { selectedPatient } = usePatient();
@@ -50,11 +50,15 @@ export default function MedicalNoteScreen() {
   const [errorMessage, setErrorMessage] = useState('');
   const [formData, setFormData] = useState({ subjetivo: '', objetivo: '', analisis: '', plan: '' });
 
+  useEffect(() => {
+    moment.locale(i18n.language === 'en' ? 'en' : 'es');
+  }, [i18n.language]);
+
   const patientLabel = useMemo(() => `Exp: ${idExp || 'N/A'} | Atención: ${idAtencion || 'N/A'}`, [idAtencion, idExp]);
 
   useEffect(() => {
     if (!idAtencion) {
-      setErrorMessage('Selecciona un paciente antes de registrar una nota médica.');
+      setErrorMessage(t('medicalSoap.selectPatientFirst'));
       return;
     }
     setErrorMessage('');
@@ -109,7 +113,7 @@ export default function MedicalNoteScreen() {
 
   const handleSubmit = async () => {
     if (!formData.subjetivo.trim()) {
-      window.alert('El campo Subjetivo es requerido');
+      window.alert(t('medicalSoap.subjectiveRequired'));
       return;
     }
 
@@ -123,17 +127,17 @@ export default function MedicalNoteScreen() {
       }
     } catch (error) {
       console.error('Error saving medical note:', error);
-      window.alert(error.response?.data?.error || 'No se pudo guardar la nota médica');
+      window.alert(error.response?.data?.error || t('medicalSoap.saveError'));
     } finally {
       setLoading(false);
     }
   };
 
   const sections = [
-    { key: 'subjetivo', label: 'Subjetivo', badge: 'S', color: '#4299e1', placeholder: 'Describa los síntomas y percepciones del paciente...' },
-    { key: 'objetivo', label: 'Objetivo', badge: 'O', color: '#48bb78', placeholder: 'Describa los hallazgos físicos y resultados de exploración...' },
-    { key: 'analisis', label: 'Análisis', badge: 'A', color: '#ed8936', placeholder: 'Diagnóstico diferencial y análisis de la información...' },
-    { key: 'plan', label: 'Plan', badge: 'P', color: '#9f7aea', placeholder: 'Tratamiento, estudios, referencias y seguimiento...' },
+    { key: 'subjetivo', label: t('medicalSoap.subjective'), badge: 'S', color: '#4299e1', placeholder: t('medicalSoap.subjectivePlaceholder') },
+    { key: 'objetivo', label: t('medicalSoap.objective'), badge: 'O', color: '#48bb78', placeholder: t('medicalSoap.objectivePlaceholder') },
+    { key: 'analisis', label: t('medicalSoap.analysis'), badge: 'A', color: '#ed8936', placeholder: t('medicalSoap.analysisPlaceholder') },
+    { key: 'plan', label: t('medicalSoap.plan'), badge: 'P', color: '#9f7aea', placeholder: t('medicalSoap.planPlaceholder') },
   ];
 
   return (
@@ -142,7 +146,7 @@ export default function MedicalNoteScreen() {
         <button type="button" onClick={() => navigate(-1)} style={styles.headerButton}><FiArrowLeft size={20} /></button>
         <div>
           <div style={styles.headerEyebrow}>MÉDICO</div>
-          <h1 style={styles.headerTitle}>Nota Médica SOAP</h1>
+          <h1 style={styles.headerTitle}>{t('medicalSoap.title')}</h1>
         </div>
         <button type="button" onClick={reloadHistory} style={styles.headerActionButton} disabled={!idAtencion || loadingHistory}><FiRefreshCw size={18} /></button>
       </div>
@@ -150,7 +154,7 @@ export default function MedicalNoteScreen() {
       <section style={styles.patientCard}>
         <div style={styles.patientAvatar}><FiUser size={30} color="#fff" /></div>
         <div>
-          <h2 style={styles.patientName}>Paciente seleccionado</h2>
+          <h2 style={styles.patientName}>{t('medicalSoap.selectedPatient')}</h2>
           <p style={styles.patientMeta}>{patientLabel}</p>
         </div>
       </section>
@@ -158,7 +162,7 @@ export default function MedicalNoteScreen() {
       {errorMessage ? <div style={styles.errorCard}>{errorMessage}</div> : null}
 
       <section style={styles.mainCard}>
-        <div style={styles.cardHeader}><FiFileText size={20} /><strong>Nueva Nota Médica</strong></div>
+        <div style={styles.cardHeader}><FiFileText size={20} /><strong>{t('medicalSoap.newNote')}</strong></div>
         <div style={styles.cardBody}>
           {sections.map((section) => (
             <div key={section.key} style={styles.soapSection}>
@@ -171,18 +175,18 @@ export default function MedicalNoteScreen() {
           ))}
         </div>
         <div style={styles.cardFooter}>
-          <button type="button" style={styles.saveButton} onClick={handleSubmit} disabled={!idAtencion || loading}><FiSave size={18} /><span>{loading ? 'Guardando...' : 'Guardar Nota'}</span></button>
+          <button type="button" style={styles.saveButton} onClick={handleSubmit} disabled={!idAtencion || loading}><FiSave size={18} /><span>{loading ? t('medicalSoap.saving') : t('medicalSoap.save')}</span></button>
         </div>
       </section>
 
       <section style={styles.historyCard}>
         <button type="button" style={styles.historyToggle} onClick={() => setShowHistory((current) => !current)}>
-          <div style={styles.historyTitleRow}><FiClock size={18} /><strong>Historial de Notas Médicas</strong><span style={styles.historyCount}>{history.length} registros</span></div>
+          <div style={styles.historyTitleRow}><FiClock size={18} /><strong>{t('medicalSoap.history')}</strong><span style={styles.historyCount}>{history.length} {t('vitalSigns.registros')}</span></div>
           {showHistory ? <FiChevronUp size={18} /> : <FiChevronDown size={18} />}
         </button>
         {showHistory ? (
           <div style={styles.historyBody}>
-            {loadingHistory ? <div style={styles.statusBox}>Cargando historial...</div> : history.length === 0 ? <div style={styles.statusBox}>No hay notas médicas previas.</div> : history.map((item, index) => (
+            {loadingHistory ? <div style={styles.statusBox}>{t('medicalSoap.loadingHistory')}</div> : history.length === 0 ? <div style={styles.statusBox}>{t('medicalSoap.noNotes')}</div> : history.map((item, index) => (
               <article key={item.id_nota || `${item.fecha_registro || 'note'}-${index}`} style={styles.historyItem}>
                 <div style={styles.historyHeader}><div style={styles.historyBadge}>{moment(item.fecha_registro).format('DD/MM')}</div><div><div style={styles.historyDate}>{moment(item.fecha_registro).format('dddd, D [de] MMMM [de] YYYY [a las] HH:mm')}</div><div style={styles.historyAuthor}>Dr. {item.id_medico || 'No especificado'}</div></div></div>
                 {sections.map((section) => item[section.key] ? <div key={section.key} style={styles.historyFieldBlock}><div style={styles.historyFieldLabel}>{section.label}</div><p style={styles.historyFieldValue}>{item[section.key]}</p></div> : null)}
@@ -192,7 +196,7 @@ export default function MedicalNoteScreen() {
         ) : null}
       </section>
 
-      <footer style={styles.footer}><FiShield size={14} /><span>INEO v2.0 - Nota médica SOAP</span></footer>
+      <footer style={styles.footer}><FiShield size={14} /><span>{t('medicalSoap.footer')}</span></footer>
     </div>
   );
 }

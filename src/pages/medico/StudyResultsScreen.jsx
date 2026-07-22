@@ -6,6 +6,7 @@ import { usePatient } from '../../context/PatientContext';
 import api from '../../services/api';
 import moment from 'moment';
 import 'moment/locale/es';
+import { useTranslation } from 'react-i18next';
 
 moment.locale('es');
 
@@ -22,6 +23,7 @@ function getPatientName(paciente) {
 }
 
 export default function StudyResultsScreen() {
+  const { t, i18n } = useTranslation();
   const navigate = useNavigate();
   const location = useLocation();
   const { selectedPatient } = usePatient();
@@ -38,7 +40,7 @@ export default function StudyResultsScreen() {
 
   useEffect(() => {
     if (!idAtencion || !idExp) {
-      setErrorMessage('Selecciona un paciente antes de consultar resultados.');
+      setErrorMessage(t('studyResults.selectPatientFirst'));
       setLoading(false);
       return;
     }
@@ -59,7 +61,7 @@ export default function StudyResultsScreen() {
         setImagingResults(Array.isArray(imagingResponse.data) ? imagingResponse.data : []);
       } catch (error) {
         console.error('Error loading study results:', error);
-        setErrorMessage('No se pudieron cargar los resultados del paciente.');
+        setErrorMessage(t('studyResults.errorLoading'));
       } finally {
         setLoading(false);
       }
@@ -69,8 +71,8 @@ export default function StudyResultsScreen() {
   }, [idAtencion, idExp]);
 
   const sections = [
-    { key: 'lab', title: 'Resultados de Laboratorio', icon: FiActivity, color: '#0ea5e9', items: labResults },
-    { key: 'imaging', title: 'Resultados de Gabinete', icon: MdOutlineScreenshotMonitor, color: '#f59e0b', items: imagingResults },
+    { key: 'lab', title: t('studyResults.labResults'), icon: FiActivity, color: '#0ea5e9', items: labResults },
+    { key: 'imaging', title: t('studyResults.imagingResults'), icon: MdOutlineScreenshotMonitor, color: '#f59e0b', items: imagingResults },
   ];
 
   const renderResultCard = (item, color) => {
@@ -85,7 +87,7 @@ export default function StudyResultsScreen() {
           </div>
           <div style={styles.resultHeaderContent}>
             <strong style={styles.resultDate}>{moment(item.fecha).format('dddd, D [de] MMMM [de] YYYY [a las] HH:mm')}</strong>
-            <span style={styles.resultMeta}>Médico: {item.medico || 'No especificado'}</span>
+            <span style={styles.resultMeta}>{t('studyResults.doctor')} {item.medico || t('studyResults.notSpecified')}</span>
           </div>
           <span style={{ ...styles.statusPill, backgroundColor: item.estado === 'REALIZADO' ? '#dcfce7' : '#fef3c7', color: item.estado === 'REALIZADO' ? '#166534' : '#92400e' }}>{item.estado || 'PENDIENTE'}</span>
         </div>
@@ -97,7 +99,7 @@ export default function StudyResultsScreen() {
                 <strong style={styles.detailTitle}>{detail.nombre || 'Estudio'}</strong>
                 <span style={{ ...styles.detailStatus, color: detail.estado === 'REALIZADO' ? '#16a34a' : '#d97706' }}>{detail.estado || 'PENDIENTE'}</span>
               </div>
-              {detail.resultado ? <p style={styles.detailText}>{detail.resultado}</p> : <p style={styles.detailMuted}>Sin resultado capturado.</p>}
+              {detail.resultado ? <p style={styles.detailText}>{detail.resultado}</p> : <p style={styles.detailMuted}>{t('studyResults.noResultCaptured')}</p>}
             </div>
           ))}
         </div>
@@ -105,12 +107,12 @@ export default function StudyResultsScreen() {
         {item.observaciones ? <p style={styles.observations}>{item.observaciones}</p> : null}
 
         <div style={styles.resultActions}>
-          <button type="button" style={styles.secondaryButton} onClick={() => setSelectedExam(item)}><FiFileText size={16} /> Ver detalle</button>
+          <button type="button" style={styles.secondaryButton} onClick={() => setSelectedExam(item)}><FiFileText size={16} /> {t('studyResults.viewDetail')}</button>
           {hasAttachment ? <button type="button" style={styles.primaryButton} onClick={() => {
             const detailWithFile = details.find((detail) => detail.archivo_resultado);
             const url = buildAssetUrl(detailWithFile?.archivo_resultado);
             if (url) window.open(url, '_blank', 'noopener,noreferrer');
-          }}><FiDownload size={16} /> Abrir adjunto</button> : null}
+          }}><FiDownload size={16} /> {t('studyResults.openAttachment')}</button> : null}
         </div>
       </article>
     );
@@ -122,7 +124,7 @@ export default function StudyResultsScreen() {
         <button type="button" onClick={() => navigate(-1)} style={styles.headerButton}><FiArrowLeft size={20} /></button>
         <div>
           <div style={styles.headerEyebrow}>MÉDICO</div>
-          <h1 style={styles.headerTitle}>Resultados de Estudios</h1>
+          <h1 style={styles.headerTitle}>{t('studyResults.title')}</h1>
         </div>
         <div style={styles.headerSpacer} />
       </div>
@@ -136,12 +138,12 @@ export default function StudyResultsScreen() {
       </section>
 
       <section style={styles.shortcutCard}>
-        <button type="button" style={styles.shortcutButton} onClick={() => navigate('/medico/lab-exams', { state: { id_atencion: idAtencion, Id_exp: idExp } })}>Solicitar laboratorio</button>
-        <button type="button" style={styles.shortcutButton} onClick={() => navigate('/medico/imaging-exams', { state: { id_atencion: idAtencion, Id_exp: idExp } })}>Solicitar gabinete</button>
-        <button type="button" style={styles.shortcutButtonPrimary} onClick={() => navigate('/medico/imprimir', { state: { id_atencion: idAtencion, Id_exp: idExp } })}><FiPrinter size={16} /> Imprimir documentos</button>
+        <button type="button" style={styles.shortcutButton} onClick={() => navigate('/medico/lab-exams', { state: { id_atencion: idAtencion, Id_exp: idExp } })}>{t('studyResults.requestLab')}</button>
+        <button type="button" style={styles.shortcutButton} onClick={() => navigate('/medico/imaging-exams', { state: { id_atencion: idAtencion, Id_exp: idExp } })}>{t('studyResults.requestImaging')}</button>
+        <button type="button" style={styles.shortcutButtonPrimary} onClick={() => navigate('/medico/imprimir', { state: { id_atencion: idAtencion, Id_exp: idExp } })}><FiPrinter size={16} /> {t('studyResults.printDocs')}</button>
       </section>
 
-      {loading ? <div style={styles.loadingCard}>Cargando resultados...</div> : errorMessage ? <div style={styles.errorCard}>{errorMessage}</div> : (
+      {loading ? <div style={styles.loadingCard}>{t('studyResults.loading')}</div> : errorMessage ? <div style={styles.errorCard}>{errorMessage}</div> : (
         <>
           {sections.map((section) => {
             const SectionIcon = section.icon;
@@ -153,7 +155,7 @@ export default function StudyResultsScreen() {
                   <span style={styles.sectionCount}>{section.items.length} registros</span>
                 </div>
                 <div style={styles.sectionBody}>
-                  {section.items.length === 0 ? <div style={styles.statusBox}>No hay resultados disponibles en esta sección.</div> : section.items.map((item) => renderResultCard(item, section.color))}
+                  {section.items.length === 0 ? <div style={styles.statusBox}>{t('studyResults.noResults')}</div> : section.items.map((item) => renderResultCard(item, section.color))}
                 </div>
               </section>
             );
@@ -162,18 +164,18 @@ export default function StudyResultsScreen() {
           {selectedExam ? (
             <section style={styles.detailPanel}>
               <div style={styles.detailPanelHeader}>
-                <strong>Detalle del estudio seleccionado</strong>
-                <button type="button" style={styles.linkButton} onClick={() => setSelectedExam(null)}>Cerrar</button>
+                <strong>{t('studyResults.detailTitle')}</strong>
+                <button type="button" style={styles.linkButton} onClick={() => setSelectedExam(null)}>{t('studyResults.close')}</button>
               </div>
               <div style={styles.detailPanelBody}>
-                <div style={styles.detailPanelMeta}><span>Fecha</span><strong>{moment(selectedExam.fecha).format('DD/MM/YYYY HH:mm')}</strong></div>
-                <div style={styles.detailPanelMeta}><span>Médico</span><strong>{selectedExam.medico || 'No especificado'}</strong></div>
-                <div style={styles.detailPanelMeta}><span>Observaciones</span><strong>{selectedExam.observaciones || 'Sin observaciones'}</strong></div>
+                <div style={styles.detailPanelMeta}><span>{t('studyResults.date')}</span><strong>{moment(selectedExam.fecha).format('DD/MM/YYYY HH:mm')}</strong></div>
+                <div style={styles.detailPanelMeta}><span>{t('studyResults.physician')}</span><strong>{selectedExam.medico || t('studyResults.notSpecified')}</strong></div>
+                <div style={styles.detailPanelMeta}><span>{t('studyResults.observations')}</span><strong>{selectedExam.observaciones || t('studyResults.noObservations')}</strong></div>
                 <div style={styles.detailResultsList}>
                   {(selectedExam.detalles || []).map((detail, index) => (
                     <div key={`${detail.nombre || 'detail'}-${index}`} style={styles.detailResultCard}>
                       <strong style={styles.detailResultTitle}>{detail.nombre || 'Estudio'}</strong>
-                      <p style={styles.detailResultText}>{detail.resultado || 'Sin resultado capturado.'}</p>
+                      <p style={styles.detailResultText}>{detail.resultado || t('studyResults.noResultCaptured')}</p>
                     </div>
                   ))}
                 </div>
@@ -183,7 +185,7 @@ export default function StudyResultsScreen() {
         </>
       )}
 
-      <footer style={styles.footer}><FiShield size={14} /><span>INEO v2.0 - Consulta de resultados</span></footer>
+      <footer style={styles.footer}><FiShield size={14} /><span>{t('studyResults.footer')}</span></footer>
     </div>
   );
 }

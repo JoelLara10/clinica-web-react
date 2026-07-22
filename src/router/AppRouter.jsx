@@ -1,4 +1,5 @@
 import { Routes, Route, Navigate } from 'react-router-dom';
+import { useTranslation } from 'react-i18next';
 import { useAuth } from '../context/AuthContext';
 
 import LoginScreen from '../pages/auth/LoginScreen';
@@ -47,24 +48,29 @@ import AutomationConfigScreen from '../pages/config/AutomationConfigScreen';
 import BackupConfigScreen from '../pages/config/BackupConfigScreen';
 import ProfileConfigScreen from '../pages/config/ProfileConfigScreen';
 
-const Placeholder = ({ name }) => (
-  <div style={{ padding: 32, fontSize: 24 }}>
-    {name} — en construcción
-  </div>
-);
+const Placeholder = ({ name }) => {
+  const { t } = useTranslation();
+  return (
+    <div style={{ padding: 32, fontSize: 24 }}>
+      {name} — {t('common.loading').replace('...', '')} construction
+    </div>
+  );
+};
 
 const PrivateRoute = ({ children }) => {
+  const { t } = useTranslation();
   const { isAuthenticated, loading } = useAuth();
 
-  if (loading) return <div className="loading-screen">Cargando...</div>;
+  if (loading) return <div className="loading-screen">{t('common.loading')}</div>;
 
   return isAuthenticated ? children : <Navigate to="/login" replace />;
 };
 
 const PublicLoginRoute = () => {
+  const { t } = useTranslation();
   const { isAuthenticated, loading } = useAuth();
 
-  if (loading) return <div className="loading-screen">Cargando...</div>;
+  if (loading) return <div className="loading-screen">{t('common.loading')}</div>;
 
   return isAuthenticated ? <Navigate to="/" replace /> : <LoginScreen />;
 };

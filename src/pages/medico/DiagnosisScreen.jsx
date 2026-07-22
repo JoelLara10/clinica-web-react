@@ -5,8 +5,7 @@ import { usePatient } from '../../context/PatientContext';
 import api from '../../services/api';
 import moment from 'moment';
 import 'moment/locale/es';
-
-moment.locale('es');
+import { useTranslation } from 'react-i18next';
 
 const CACHE_CURRENT = 'ineo_web_cache_medico_diagnosis_current_';
 const CACHE_HISTORY = 'ineo_web_cache_medico_diagnosis_history_';
@@ -39,6 +38,7 @@ function setCachedValue(key, data, ttl = CACHE_TTL) {
 }
 
 export default function DiagnosisScreen() {
+  const { t, i18n } = useTranslation();
   const navigate = useNavigate();
   const location = useLocation();
   const { selectedPatient } = usePatient();
@@ -53,11 +53,15 @@ export default function DiagnosisScreen() {
   const [errorMessage, setErrorMessage] = useState('');
   const [formData, setFormData] = useState({ diagnostico_principal: '', diagnosticos_secundarios: '', observaciones: '' });
 
+  useEffect(() => {
+    moment.locale(i18n.language === 'en' ? 'en' : 'es');
+  }, [i18n.language]);
+
   const patientLabel = useMemo(() => `Exp: ${idExp || 'N/A'} | Atención: ${idAtencion || 'N/A'}`, [idAtencion, idExp]);
 
   useEffect(() => {
     if (!idAtencion) {
-      setErrorMessage('Selecciona un paciente antes de registrar diagnóstico.');
+      setErrorMessage(t('medicalDiagnosis.selectPatientFirst'));
       return;
     }
     setErrorMessage('');
@@ -169,7 +173,7 @@ export default function DiagnosisScreen() {
 
   const handleSubmit = async () => {
     if (!formData.diagnostico_principal.trim()) {
-      window.alert('El diagnóstico principal es requerido');
+      window.alert(t('medicalDiagnosis.principalRequired'));
       return;
     }
 
@@ -180,7 +184,7 @@ export default function DiagnosisScreen() {
       await reloadAll();
     } catch (error) {
       console.error('Error saving diagnosis:', error);
-      window.alert(error.response?.data?.error || 'No se pudo guardar el diagnóstico');
+      window.alert(error.response?.data?.error || t('medicalDiagnosis.saveError'));
     } finally {
       setLoading(false);
     }
@@ -192,7 +196,7 @@ export default function DiagnosisScreen() {
         <button type="button" onClick={() => navigate(-1)} style={styles.headerButton}><FiArrowLeft size={20} /></button>
         <div>
           <div style={styles.headerEyebrow}>MÉDICO</div>
-          <h1 style={styles.headerTitle}>Diagnóstico Médico</h1>
+          <h1 style={styles.headerTitle}>{t('medicalDiagnosis.title')}</h1>
         </div>
         <button type="button" onClick={reloadAll} style={styles.headerActionButton} disabled={!idAtencion || loadingData || loadingHistory}><FiRefreshCw size={18} /></button>
       </div>
@@ -200,36 +204,36 @@ export default function DiagnosisScreen() {
       <section style={styles.patientCard}>
         <div style={styles.patientAvatar}><FiUser size={30} color="#fff" /></div>
         <div>
-          <h2 style={styles.patientName}>Paciente seleccionado</h2>
+          <h2 style={styles.patientName}>{t('medicalDiagnosis.selectedPatient')}</h2>
           <p style={styles.patientMeta}>{patientLabel}</p>
         </div>
       </section>
 
       {errorMessage ? <div style={styles.errorCard}>{errorMessage}</div> : null}
 
-      {loadingData ? <div style={styles.loadingCard}>Cargando diagnóstico...</div> : (
+      {loadingData ? <div style={styles.loadingCard}>{t('medicalDiagnosis.loadingData')}</div> : (
         <>
           <section style={styles.mainCard}>
-            <div style={styles.cardHeader}><FiClipboard size={20} /><strong>{currentDiagnosis ? 'Editar Diagnóstico' : 'Nuevo Diagnóstico'}</strong></div>
+            <div style={styles.cardHeader}><FiClipboard size={20} /><strong>{currentDiagnosis ? t('medicalDiagnosis.editDiagnosis') : t('medicalDiagnosis.newDiagnosis')}</strong></div>
             <div style={styles.cardBody}>
-              <div style={styles.sectionBox}><div style={styles.sectionRow}><div style={styles.sectionBadge}>1</div><strong>Diagnóstico principal *</strong></div><input style={styles.input} placeholder="Ej: Diabetes mellitus tipo 2" value={formData.diagnostico_principal} onChange={(event) => handleChange('diagnostico_principal', event.target.value)} /></div>
-              <div style={styles.sectionBox}><div style={styles.sectionRow}><div style={styles.sectionBadge}>2</div><strong>Diagnósticos secundarios</strong></div><textarea style={styles.textArea} placeholder="Uno por línea o separados por comas" value={formData.diagnosticos_secundarios} onChange={(event) => handleChange('diagnosticos_secundarios', event.target.value)} rows={4} /></div>
-              <div style={styles.sectionBox}><div style={styles.sectionRow}><div style={styles.sectionBadge}>3</div><strong>Observaciones</strong></div><textarea style={styles.textArea} placeholder="Notas adicionales..." value={formData.observaciones} onChange={(event) => handleChange('observaciones', event.target.value)} rows={4} /></div>
+              <div style={styles.sectionBox}><div style={styles.sectionRow}><div style={styles.sectionBadge}>1</div><strong>{t('medicalDiagnosis.principalDiagnosis')}</strong></div><input style={styles.input} placeholder={t('medicalDiagnosis.principalDiagnosisPlaceholder')} value={formData.diagnostico_principal} onChange={(event) => handleChange('diagnostico_principal', event.target.value)} /></div>
+              <div style={styles.sectionBox}><div style={styles.sectionRow}><div style={styles.sectionBadge}>2</div><strong>{t('medicalDiagnosis.secondaryDiagnoses')}</strong></div><textarea style={styles.textArea} placeholder={t('medicalDiagnosis.secondaryPlaceholder')} value={formData.diagnosticos_secundarios} onChange={(event) => handleChange('diagnosticos_secundarios', event.target.value)} rows={4} /></div>
+              <div style={styles.sectionBox}><div style={styles.sectionRow}><div style={styles.sectionBadge}>3</div><strong>{t('medicalDiagnosis.observations')}</strong></div><textarea style={styles.textArea} placeholder={t('medicalDiagnosis.observationsPlaceholder')} value={formData.observaciones} onChange={(event) => handleChange('observaciones', event.target.value)} rows={4} /></div>
             </div>
-            <div style={styles.cardFooter}><button type="button" style={styles.cancelButton} onClick={() => navigate(-1)}>Cancelar</button><button type="button" style={styles.saveButton} onClick={handleSubmit} disabled={!idAtencion || loading}><FiSave size={18} /><span>{loading ? 'Guardando...' : currentDiagnosis ? 'Actualizar Diagnóstico' : 'Guardar Diagnóstico'}</span></button></div>
+            <div style={styles.cardFooter}><button type="button" style={styles.cancelButton} onClick={() => navigate(-1)}>{t('common.cancel')}</button><button type="button" style={styles.saveButton} onClick={handleSubmit} disabled={!idAtencion || loading}><FiSave size={18} /><span>{loading ? t('medicalDiagnosis.saving') : currentDiagnosis ? t('medicalDiagnosis.update') : t('medicalDiagnosis.save')}</span></button></div>
           </section>
 
           <section style={styles.historyCard}>
             <button type="button" style={styles.historyToggle} onClick={() => setShowHistory((current) => !current)}>
-              <div style={styles.historyTitleRow}><FiClock size={18} /><strong>Historial de Diagnósticos</strong><span style={styles.historyCount}>{history.length} registros</span></div>
+              <div style={styles.historyTitleRow}><FiClock size={18} /><strong>{t('medicalDiagnosis.history')}</strong><span style={styles.historyCount}>{history.length} {t('vitalSigns.registros')}</span></div>
               {showHistory ? <FiChevronUp size={18} /> : <FiChevronDown size={18} />}
             </button>
-            {showHistory ? <div style={styles.historyBody}>{loadingHistory ? <div style={styles.statusBox}>Cargando historial...</div> : history.length === 0 ? <div style={styles.statusBox}>No hay diagnósticos previos.</div> : history.map((item, index) => <article key={`diag_${item.id_diagnostico || 'no-id'}_${index}`} style={styles.historyItem}><div style={styles.historyHeader}><div style={styles.historyBadge}>{moment(item.fecha_registro).format('DD/MM')}</div><div><div style={styles.historyDate}>{moment(item.fecha_registro).format('dddd, D [de] MMMM [de] YYYY [a las] HH:mm')}</div><div style={styles.historyAuthor}>Dr. {item.medico_nombre || 'No especificado'}</div></div></div><div style={styles.historyFieldLabel}>Diagnóstico principal</div><p style={styles.historyFieldValue}>{item.diagnostico_principal}</p>{item.diagnosticos_secundarios ? <><div style={styles.historyFieldLabel}>Diagnósticos secundarios</div><p style={styles.historyFieldValue}>{item.diagnosticos_secundarios}</p></> : null}{item.observaciones ? <><div style={styles.historyFieldLabel}>Observaciones</div><p style={styles.historyFieldValue}>{item.observaciones}</p></> : null}</article>)}</div> : null}
+            {showHistory ? <div style={styles.historyBody}>{loadingHistory ? <div style={styles.statusBox}>{t('medicalDiagnosis.loadingHistory')}</div> : history.length === 0 ? <div style={styles.statusBox}>{t('medicalDiagnosis.noDiagnoses')}</div> : history.map((item, index) => <article key={`diag_${item.id_diagnostico || 'no-id'}_${index}`} style={styles.historyItem}><div style={styles.historyHeader}><div style={styles.historyBadge}>{moment(item.fecha_registro).format('DD/MM')}</div><div><div style={styles.historyDate}>{moment(item.fecha_registro).format('dddd, D [de] MMMM [de] YYYY [a las] HH:mm')}</div><div style={styles.historyAuthor}>Dr. {item.medico_nombre || 'No especificado'}</div></div></div><div style={styles.historyFieldLabel}>{t('medicalDiagnosis.principalLabel')}</div><p style={styles.historyFieldValue}>{item.diagnostico_principal}</p>{item.diagnosticos_secundarios ? <><div style={styles.historyFieldLabel}>{t('medicalDiagnosis.secondaryLabel')}</div><p style={styles.historyFieldValue}>{item.diagnosticos_secundarios}</p></> : null}{item.observaciones ? <><div style={styles.historyFieldLabel}>{t('medicalDiagnosis.observationsLabel')}</div><p style={styles.historyFieldValue}>{item.observaciones}</p></> : null}</article>)}</div> : null}
           </section>
         </>
       )}
 
-      <footer style={styles.footer}><FiShield size={14} /><span>INEO v2.0 - Diagnóstico médico</span></footer>
+      <footer style={styles.footer}><FiShield size={14} /><span>{t('medicalDiagnosis.footer')}</span></footer>
     </div>
   );
 }

@@ -1,5 +1,6 @@
 import React, { useState, useEffect, useCallback, useRef } from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
+import { useTranslation } from 'react-i18next';
 import { useAuth } from '../../context/AuthContext';
 import api from '../../services/api';
 import {
@@ -21,27 +22,28 @@ import {
 import { FaFlask, FaChartBar, FaClipboardList, FaFolderOpen } from 'react-icons/fa';
 import './EstudiosScreen.css';
 
-const SECTIONS = [
-  { id: 'solicitudes_lab', label: 'Solicitudes Lab', icon: <FaFlask /> },
-  { id: 'solicitudes_gab', label: 'Solicitudes Gab', icon: <FaChartBar /> },
-  { id: 'resultados_lab', label: 'Resultados Lab', icon: <FaClipboardList /> },
-  { id: 'resultados_gab', label: 'Resultados Gab', icon: <FaFolderOpen /> },
-];
-
-const SECTION_CONFIG = {
-  solicitudes_lab: { endpoint: '/pending', type: 'LABORATORIO', isPending: true },
-  solicitudes_gab: { endpoint: '/pending', type: 'GABINETE', isPending: true },
-  resultados_lab: { endpoint: '/completed', type: 'LABORATORIO', isPending: false },
-  resultados_gab: { endpoint: '/completed', type: 'GABINETE', isPending: false },
-};
-
 const PAGE_SIZE = 5;
 const FETCH_ALL_LIMIT = 9999;
 
 export default function EstudiosScreen() {
+  const { t } = useTranslation();
   const navigate = useNavigate();
   const location = useLocation();
   const { user } = useAuth();
+
+  const SECTIONS = [
+    { id: 'solicitudes_lab', label: t('studies.labRequests'), icon: <FaFlask /> },
+    { id: 'solicitudes_gab', label: t('studies.imagingRequests'), icon: <FaChartBar /> },
+    { id: 'resultados_lab', label: t('studies.labResults'), icon: <FaClipboardList /> },
+    { id: 'resultados_gab', label: t('studies.imagingResults'), icon: <FaFolderOpen /> },
+  ];
+
+  const SECTION_CONFIG = {
+    solicitudes_lab: { endpoint: '/pending', type: 'LABORATORIO', isPending: true },
+    solicitudes_gab: { endpoint: '/pending', type: 'GABINETE', isPending: true },
+    resultados_lab: { endpoint: '/completed', type: 'LABORATORIO', isPending: false },
+    resultados_gab: { endpoint: '/completed', type: 'GABINETE', isPending: false },
+  };
 
   const queryParams = new URLSearchParams(location.search);
   const initialSection = queryParams.get('initialSection');
@@ -65,17 +67,17 @@ export default function EstudiosScreen() {
     paciente:
       typeof item.paciente === 'string'
         ? item.paciente
-        : item.paciente?.nombre || item.nombre_paciente || 'Paciente',
+        : item.paciente?.nombre || item.nombre_paciente || t('studies.patient'),
     medico:
       typeof item.medico === 'string'
         ? item.medico
-        : item.medico?.nombre || item.nombre_medico || 'No asignado',
+        : item.medico?.nombre || item.nombre_medico || t('studies.noDoctor'),
     estudios: Array.isArray(item.estudios)
       ? item.estudios.join(', ')
-      : item.estudios || 'Sin estudios',
+      : item.estudios || t('studies.noStudies'),
     fecha: item.fecha_solicitud || item.fecha || null,
     fecha_realizado: item.fecha_realizado || null,
-    habitacion: item.habitacion || item.numero_habitacion || item.cama || 'Sin información',
+    habitacion: item.habitacion || item.numero_habitacion || item.cama || t('studies.noInfo'),
   });
 
   const loadAllData = useCallback(
@@ -83,7 +85,7 @@ export default function EstudiosScreen() {
       const config = SECTION_CONFIG[selectedSection];
       if (!config) {
         setAllItems([]);
-        setError('Sección inválida');
+        setError(t('studies.invalidSection'));
         return;
       }
 
@@ -101,12 +103,10 @@ export default function EstudiosScreen() {
           const cached = await getCache(cacheKey);
           if (cached) {
             data = cached;
-            console.log(`📦 Carga desde caché: ${cacheKey}`);
           }
         }
 
         if (!data) {
-          console.log(`🌐 Cargando desde API para ${selectedSection}...`);
           const response = await api.get(`/exams${config.endpoint}`, {
             params: {
               type: config.type,
@@ -116,7 +116,6 @@ export default function EstudiosScreen() {
           });
           data = Array.isArray(response.data) ? response.data : [];
           await setCache(cacheKey, data);
-          console.log(`💾 Guardado en caché: ${cacheKey} (${data.length} registros)`);
         }
 
         let normalized = data.map(normalizeItem);
@@ -129,14 +128,14 @@ export default function EstudiosScreen() {
         setAllItems(normalized);
         setCurrentPage(1);
       } catch (err) {
-        const errorMsg = err.response?.data?.error || 'No se pudieron cargar los estudios.';
+        const errorMsg = err.response?.data?.error || t('studies.errorLoading');
         setError(errorMsg);
         setAllItems([]);
       } finally {
         setLoading(false);
       }
     },
-    [selectedSection]
+    [selectedSection, t]
   );
 
   const loadCounts = useCallback(
@@ -174,7 +173,6 @@ export default function EstudiosScreen() {
   const onRefresh = async () => {
     setRefreshing(true);
     skipFocusRefresh.current = true;
-    // Forzar recarga de todas las claves (refresco manual)
     await invalidateCachePrefix('estudios_all_');
     await removeCache(CacheKeys.counts);
     await Promise.all([loadAllData(true), loadCounts(true)]);
@@ -216,7 +214,7 @@ export default function EstudiosScreen() {
 
   const handleDelete = (id_examen) => {
     const tipo = selectedSection.includes('lab') ? 'laboratorio' : 'gabinete';
-    if (!window.confirm(`¿Estás seguro de eliminar este resultado de ${tipo}?`)) return;
+    if (!window.confirm(t('studies.confirmDelete', { tipo }))) return;
 
     if (deleting) return;
     setDeleting(true);
@@ -225,9 +223,8 @@ export default function EstudiosScreen() {
       try {
         await api.delete(`/exams/${id_examen}/results?type=${tipo}`);
 
-        alert(`✅ Resultado de ${tipo} eliminado correctamente.`);
+        alert(t('studies.deleteSuccess', { tipo }));
 
-        // Invalidar solo este tipo
         const tipoUpper = tipo.toUpperCase();
         await invalidateCachePrefix(`estudios_all_${tipoUpper}_`);
         await removeCache(CacheKeys.counts);
@@ -238,7 +235,7 @@ export default function EstudiosScreen() {
         ]);
       } catch (error) {
         console.error('Error al eliminar:', error);
-        let msg = 'Error al eliminar el resultado. Intenta de nuevo.';
+        let msg = t('studies.deleteError');
         if (error.response?.data?.error) {
           msg = error.response.data.error;
         }
@@ -279,14 +276,14 @@ export default function EstudiosScreen() {
         <div className="est-info-row">
           <span className="est-info-icon">📅</span>
           <span className="est-date-text">
-            Solicitado: {item.fecha ? new Date(item.fecha).toLocaleDateString() : 'Fecha no disponible'}
+            {t('studies.requested')} {item.fecha ? new Date(item.fecha).toLocaleDateString() : t('studies.dateNotAvailable')}
           </span>
         </div>
         {!isPending && item.fecha_realizado && (
           <div className="est-info-row">
             <span className="est-info-icon">✅</span>
             <span className="est-date-text">
-              Realizado: {new Date(item.fecha_realizado).toLocaleDateString()}
+              {t('studies.completed')} {new Date(item.fecha_realizado).toLocaleDateString()}
             </span>
           </div>
         )}
@@ -295,22 +292,22 @@ export default function EstudiosScreen() {
       <div className="est-action-row">
         {isPending ? (
           <button className="est-btn est-btn-upload" onClick={() => handleUpload(item)}>
-            <FiUpload /> Subir
+            <FiUpload /> {t('studies.upload')}
           </button>
         ) : (
           <>
             <button className="est-btn est-btn-view" onClick={() => handleView(item.id_examen)}>
-              <FiEye /> Ver
+              <FiEye /> {t('studies.view')}
             </button>
             <button className="est-btn est-btn-edit" onClick={() => handleEdit(item.id_examen)}>
-              <FiEdit /> Editar
+              <FiEdit /> {t('studies.edit')}
             </button>
             <button 
               className="est-btn est-btn-delete" 
               onClick={() => handleDelete(item.id_examen)}
               disabled={deleting}
             >
-              <FiTrash2 /> Eliminar
+              <FiTrash2 /> {t('studies.delete')}
             </button>
           </>
         )}
@@ -322,10 +319,10 @@ export default function EstudiosScreen() {
     <div className="est-empty">
       <div className="est-empty-emoji">📭</div>
       <div className="est-empty-text">
-        {isPending ? 'No hay solicitudes pendientes' : 'No hay resultados registrados'}
+        {isPending ? t('studies.noPendingRequests') : t('studies.noResults')}
       </div>
       <div className="est-empty-subtext">
-        {isPending ? 'Todos los estudios están completados' : 'Aún no se han subido resultados'}
+        {isPending ? t('studies.allCompleted') : t('studies.noResultsUploaded')}
       </div>
     </div>
   );
@@ -336,7 +333,7 @@ export default function EstudiosScreen() {
         <button className="est-back-btn" onClick={() => navigate(-1)}>
           <FiArrowLeft />
         </button>
-        <h1 className="est-header-title">🔬 Módulo de Estudios</h1>
+        <h1 className="est-header-title">🔬 {t('studies.headerTitle')}</h1>
         <button className="est-refresh-btn" onClick={onRefresh} disabled={refreshing}>
           <FiRefreshCw className={refreshing ? 'est-spin' : ''} />
         </button>
@@ -346,17 +343,17 @@ export default function EstudiosScreen() {
         <div className="est-stat-box">
           <span className="est-stat-emoji">🧪</span>
           <span className="est-stat-number">{counts.laboratorio}</span>
-          <span className="est-stat-label">Laboratorio</span>
+          <span className="est-stat-label">{t('studies.laboratory')}</span>
         </div>
         <div className="est-stat-box">
           <span className="est-stat-emoji">📊</span>
           <span className="est-stat-number">{counts.gabinete}</span>
-          <span className="est-stat-label">Gabinete</span>
+          <span className="est-stat-label">{t('studies.imaging')}</span>
         </div>
         <div className="est-stat-box">
           <span className="est-stat-emoji">⚠️</span>
           <span className="est-stat-number">{counts.total}</span>
-          <span className="est-stat-label">Total Pendientes</span>
+          <span className="est-stat-label">{t('studies.totalPending')}</span>
         </div>
       </div>
 
@@ -387,7 +384,7 @@ export default function EstudiosScreen() {
         ) : loading && allItems.length === 0 ? (
           <div className="est-loading">
             <div className="est-spinner"></div>
-            <div>Cargando estudios...</div>
+            <div>{t('studies.loading')}</div>
           </div>
         ) : allItems.length === 0 ? (
           renderEmpty()

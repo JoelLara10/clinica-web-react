@@ -6,6 +6,7 @@ import { usePatient } from '../../context/PatientContext';
 import api from '../../services/api';
 import moment from 'moment';
 import 'moment/locale/es';
+import { useTranslation } from 'react-i18next';
 
 moment.locale('es');
 
@@ -61,6 +62,7 @@ function calculateAge(fecnac) {
 }
 
 export default function PatientDetailScreen() {
+  const { t, i18n } = useTranslation();
   const navigate = useNavigate();
   const location = useLocation();
   const { id, idAtencion, idExp } = useParams();
@@ -73,7 +75,7 @@ export default function PatientDetailScreen() {
 
   useEffect(() => {
     if (!routeIdExp || !routeIdAtencion) {
-      setErrorMessage('No se encontró la referencia completa del paciente. Regresa al panel médico y selecciónalo nuevamente.');
+      setErrorMessage(t('medicalDetail.errorNotFound'));
       setLoading(false);
       return;
     }
@@ -112,7 +114,7 @@ export default function PatientDetailScreen() {
       } catch (error) {
         console.error('Error loading medico patient detail:', error);
         if (!isCancelled) {
-          setErrorMessage('No se pudo cargar la información del paciente.');
+          setErrorMessage(t('medicalDetail.errorLoading'));
         }
       } finally {
         if (!isCancelled) {
@@ -138,15 +140,15 @@ export default function PatientDetailScreen() {
   ), [patientData]);
 
   const modules = [
-    { title: 'Signos Vitales', subtitle: 'Registro inmediato', icon: FiHeart, color: '#dc2626', background: '#fef2f2', path: '/medico/signos-vitales' },
-    { title: 'Historial de Signos', subtitle: 'Consulta y PDF', icon: FiActivity, color: '#1d4ed8', background: '#eff6ff', path: '/medico/signos-vitales/historial' },
-    { title: 'Nota Médica', subtitle: 'Notas SOAP', icon: FiFileText, color: '#2563eb', background: '#eff6ff', path: '/medico/nota-medica' },
-    { title: 'Diagnóstico', subtitle: 'Impresión diagnóstica', icon: MdLocalHospital, color: '#16a34a', background: '#f0fdf4', path: '/medico/diagnostico' },
-    { title: 'Receta Médica', subtitle: 'Prescripción', icon: MdMedication, color: '#ea580c', background: '#fff7ed', path: '/medico/receta' },
-    { title: 'Laboratorio', subtitle: 'Solicitar análisis', icon: FiTool, color: '#0ea5e9', background: '#f0f9ff', path: '/medico/lab-exams' },
-    { title: 'Gabinete', subtitle: 'Solicitar estudios', icon: FiTool, color: '#d97706', background: '#fff7ed', path: '/medico/imaging-exams' },
-    { title: 'Resultados', subtitle: 'Estudios y documentos', icon: FiActivity, color: '#7c3aed', background: '#faf5ff', path: '/medico/resultados' },
-    { title: 'Imprimir', subtitle: 'PDF y documentos', icon: FiFileText, color: '#4f46e5', background: '#eef2ff', path: '/medico/imprimir' },
+    { title: t('medicalDetail.vitalSigns'), subtitle: t('medicalDetail.vitalSignsSub'), icon: FiHeart, color: '#dc2626', background: '#fef2f2', path: '/medico/signos-vitales' },
+    { title: t('medicalDetail.vitalSignsHistory'), subtitle: t('medicalDetail.vitalSignsHistorySub'), icon: FiActivity, color: '#1d4ed8', background: '#eff6ff', path: '/medico/signos-vitales/historial' },
+    { title: t('medicalDetail.medicalNote'), subtitle: t('medicalDetail.medicalNoteSub'), icon: FiFileText, color: '#2563eb', background: '#eff6ff', path: '/medico/nota-medica' },
+    { title: t('medicalDetail.diagnosisTitle'), subtitle: t('medicalDetail.diagnosisSub'), icon: MdLocalHospital, color: '#16a34a', background: '#f0fdf4', path: '/medico/diagnostico' },
+    { title: t('medicalDetail.prescription'), subtitle: t('medicalDetail.prescriptionSub'), icon: MdMedication, color: '#ea580c', background: '#fff7ed', path: '/medico/receta' },
+    { title: t('medicalDetail.laboratory'), subtitle: t('medicalDetail.laboratorySub'), icon: FiTool, color: '#0ea5e9', background: '#f0f9ff', path: '/medico/lab-exams' },
+    { title: t('medicalDetail.imaging'), subtitle: t('medicalDetail.imagingSub'), icon: FiTool, color: '#d97706', background: '#fff7ed', path: '/medico/imaging-exams' },
+    { title: t('medicalDetail.results'), subtitle: t('medicalDetail.resultsSub'), icon: FiActivity, color: '#7c3aed', background: '#faf5ff', path: '/medico/resultados' },
+    { title: t('medicalDetail.print'), subtitle: t('medicalDetail.printSub'), icon: FiFileText, color: '#4f46e5', background: '#eef2ff', path: '/medico/imprimir' },
   ];
 
   return (
@@ -157,13 +159,13 @@ export default function PatientDetailScreen() {
         </button>
         <div>
           <div style={styles.headerEyebrow}>MÉDICO</div>
-          <h1 style={styles.headerTitle}>Detalle del Paciente</h1>
+          <h1 style={styles.headerTitle}>{t('medicalDetail.title')}</h1>
         </div>
         <div style={styles.headerSpacer} />
       </div>
 
       {loading ? (
-        <div style={styles.loadingCard}>Cargando información del paciente...</div>
+        <div style={styles.loadingCard}>{t('medicalDetail.loading')}</div>
       ) : errorMessage ? (
         <div style={styles.errorCard}>{errorMessage}</div>
       ) : (
@@ -173,44 +175,44 @@ export default function PatientDetailScreen() {
               <div style={styles.avatar}><FiUser size={36} color="#fff" /></div>
               <div style={styles.patientInfo}>
                 <h2 style={styles.patientName}>{patientName}</h2>
-                <span style={styles.expBadge}>Expediente: {patientData.Id_exp || routeIdExp}</span>
+                <span style={styles.expBadge}>{t('medicalDetail.record')} {patientData.Id_exp || routeIdExp}</span>
               </div>
             </div>
 
             <div style={styles.infoGrid}>
-              <div style={styles.infoItem}><span style={styles.infoLabel}>Edad</span><strong style={styles.infoValue}>{calculateAge(patientData.fecnac)} años</strong></div>
-              <div style={styles.infoItem}><span style={styles.infoLabel}>Fecha ingreso</span><strong style={styles.infoValue}>{patientData.fecha ? moment(patientData.fecha).format('DD/MM/YYYY') : 'N/A'}</strong></div>
-              <div style={styles.infoItem}><span style={styles.infoLabel}>Cama</span><strong style={styles.infoValue}>{camaData.num_cama} - {camaData.tipo || 'N/A'}</strong></div>
-              <div style={styles.infoItem}><span style={styles.infoLabel}>Diagnóstico</span><strong style={styles.infoValue}>{patientData.motivo_atn || 'Pendiente'}</strong></div>
+              <div style={styles.infoItem}><span style={styles.infoLabel}>{t('medicalDetail.age')}</span><strong style={styles.infoValue}>{calculateAge(patientData.fecnac)} {t('medicalDetail.years')}</strong></div>
+              <div style={styles.infoItem}><span style={styles.infoLabel}>{t('medicalDetail.admissionDate')}</span><strong style={styles.infoValue}>{patientData.fecha ? moment(patientData.fecha).format('DD/MM/YYYY') : 'N/A'}</strong></div>
+              <div style={styles.infoItem}><span style={styles.infoLabel}>{t('medicalDetail.bed')}</span><strong style={styles.infoValue}>{camaData.num_cama} - {camaData.tipo || 'N/A'}</strong></div>
+              <div style={styles.infoItem}><span style={styles.infoLabel}>{t('medicalDetail.diagnosisLabel')}</span><strong style={styles.infoValue}>{patientData.motivo_atn || t('medicalDetail.pending')}</strong></div>
             </div>
 
             {patientData.alergias ? (
               <div style={styles.warningBox}>
-                <div style={styles.boxTitleRow}><FiAlertCircle size={16} color="#dc2626" /><strong style={{ color: '#dc2626' }}>Alergias</strong></div>
+                <div style={styles.boxTitleRow}><FiAlertCircle size={16} color="#dc2626" /><strong style={{ color: '#dc2626' }}>{t('medicalDetail.allergies')}</strong></div>
                 <p style={styles.boxText}>{patientData.alergias}</p>
               </div>
             ) : null}
 
             {medicosData.length > 0 ? (
               <div style={styles.infoBoxBlue}>
-                <div style={styles.boxTitleRow}><MdLocalHospital size={16} color="#2563eb" /><strong style={{ color: '#2563eb' }}>Médicos tratantes</strong></div>
+                <div style={styles.boxTitleRow}><MdLocalHospital size={16} color="#2563eb" /><strong style={{ color: '#2563eb' }}>{t('medicalDetail.treatingDoctors')}</strong></div>
                 <div style={styles.listWrap}>
-                  {medicosData.map((med, index) => <span key={`${med.doctor || 'medico'}-${index}`} style={styles.listItem}>• {med.doctor || 'Sin nombre'}</span>)}
+                  {medicosData.map((med, index) => <span key={`${med.doctor || 'medico'}-${index}`} style={styles.listItem}>• {med.doctor || t('medicalDetail.noName')}</span>)}
                 </div>
               </div>
             ) : null}
 
             {familiarData?.nombre ? (
               <div style={styles.infoBoxGreen}>
-                <div style={styles.boxTitleRow}><FiUsers size={16} color="#16a34a" /><strong style={{ color: '#16a34a' }}>Familiar responsable</strong></div>
-                <p style={styles.boxText}>{familiarData.nombre} ({familiarData.parentesco || 'No especificado'})</p>
+                <div style={styles.boxTitleRow}><FiUsers size={16} color="#16a34a" /><strong style={{ color: '#16a34a' }}>{t('medicalDetail.responsibleFamily')}</strong></div>
+                <p style={styles.boxText}>{familiarData.nombre} ({familiarData.parentesco || t('medicalDetail.notSpecified')})</p>
                 <p style={styles.boxMeta}><FiPhone size={13} /> {familiarData.telefono || 'N/A'}</p>
               </div>
             ) : null}
           </section>
 
           <section style={styles.modulesSection}>
-            <div style={styles.modulesHeading}><FiActivity size={18} color="#4338ca" /><h3 style={styles.modulesTitle}>Acciones Médicas</h3></div>
+            <div style={styles.modulesHeading}><FiActivity size={18} color="#4338ca" /><h3 style={styles.modulesTitle}>{t('medicalDetail.medicalActions')}</h3></div>
             <div style={styles.modulesGrid}>
               {modules.map((module) => {
                 const ModuleIcon = module.icon;
@@ -230,7 +232,7 @@ export default function PatientDetailScreen() {
             </div>
           </section>
 
-          <footer style={styles.footer}><FiShield size={14} /><span>INEO v2.0 - Seguimiento médico del paciente</span></footer>
+          <footer style={styles.footer}><FiShield size={14} /><span>{t('medicalDetail.footer')}</span></footer>
         </>
       )}
     </div>

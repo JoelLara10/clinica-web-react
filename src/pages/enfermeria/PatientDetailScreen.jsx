@@ -17,6 +17,7 @@ import { usePatient } from '../../context/PatientContext';
 import api from '../../services/api';
 import moment from 'moment';
 import 'moment/locale/es';
+import { useTranslation } from 'react-i18next';
 
 moment.locale('es');
 
@@ -72,6 +73,8 @@ function calculateAge(fecnac) {
 }
 
 export default function PatientDetailScreen() {
+  const { t, i18n } = useTranslation();
+  moment.locale(i18n.language === 'en' ? 'en' : 'es');
   const navigate = useNavigate();
   const location = useLocation();
   const { id, idAtencion, idExp } = useParams();
@@ -84,7 +87,7 @@ export default function PatientDetailScreen() {
 
   useEffect(() => {
     if (!routeIdExp || !routeIdAtencion) {
-      setErrorMessage('No se encontró la referencia completa del paciente. Regresa al panel de enfermería y selecciónalo nuevamente.');
+      setErrorMessage(t('nursingDetail.errorNotFound'));
       setLoading(false);
       return;
     }
@@ -126,7 +129,7 @@ export default function PatientDetailScreen() {
       } catch (error) {
         console.error('Error loading nursing patient detail:', error);
         if (!isCancelled) {
-          setErrorMessage('No se pudo cargar la información del paciente.');
+          setErrorMessage(t('nursingDetail.errorLoading'));
         }
       } finally {
         if (!isCancelled) {
@@ -155,48 +158,48 @@ export default function PatientDetailScreen() {
 
   const modules = [
     {
-      title: 'Signos Vitales',
-      subtitle: 'Registro y seguimiento',
+      title: t('nursingDetail.vitalSigns'),
+      subtitle: t('nursingDetail.vitalSignsSub'),
       icon: FiHeart,
       color: '#dc2626',
       background: '#fef2f2',
       path: '/enfermeria/signos-vitales',
     },
     {
-      title: 'Nota Enfermería',
-      subtitle: 'Notas y evolución',
+      title: t('nursingDetail.nursingNote'),
+      subtitle: t('nursingDetail.nursingNoteSub'),
       icon: FiFileText,
       color: '#2563eb',
       background: '#eff6ff',
       path: '/enfermeria/nota',
     },
     {
-      title: 'Medicamentos',
-      subtitle: 'Administración y control',
+      title: t('nursingDetail.medications'),
+      subtitle: t('nursingDetail.medicationsSub'),
       icon: MdMedication,
       color: '#16a34a',
       background: '#f0fdf4',
       path: '/enfermeria/medicamentos',
     },
     {
-      title: 'Valoración de Enfermería',
-      subtitle: 'Valoración inicial y seguimiento',
+      title: t('nursingDetail.nursingAssessment'),
+      subtitle: t('nursingDetail.nursingAssessmentSub'),
       icon: FiActivity,
       color: '#7c3aed',
       background: '#f5f3ff',
       path: '/enfermeria/valoracion',
     },
     {
-      title: 'Balance Hídrico',
-      subtitle: 'Control de ingresos y egresos',
+      title: t('nursingDetail.fluidBalance'),
+      subtitle: t('nursingDetail.fluidBalanceSub'),
       icon: FiDroplet,
       color: '#0284c7',
       background: '#f0f9ff',
       path: '/enfermeria/balance-hidrico',
     },
     {
-      title: 'Cuidados de Enfermería',
-      subtitle: 'Plan y evolución de cuidados',
+      title: t('nursingDetail.nursingCare'),
+      subtitle: t('nursingDetail.nursingCareSub'),
       icon: FiShield,
       color: '#ea580c',
       background: '#fff7ed',
@@ -211,14 +214,14 @@ export default function PatientDetailScreen() {
           <FiArrowLeft size={20} />
         </button>
         <div>
-          <div style={styles.headerEyebrow}>ENFERMERÍA</div>
-          <h1 style={styles.headerTitle}>Detalle del Paciente</h1>
+          <div style={styles.headerEyebrow}>{t('nursingDetail.eyebrow')}</div>
+          <h1 style={styles.headerTitle}>{t('nursingDetail.title')}</h1>
         </div>
         <div style={styles.headerSpacer} />
       </div>
 
       {loading ? (
-        <div style={styles.loadingCard}>Cargando información del paciente...</div>
+        <div style={styles.loadingCard}>{t('nursingDetail.loading')}</div>
       ) : errorMessage ? (
         <div style={styles.errorCard}>{errorMessage}</div>
       ) : (
@@ -230,28 +233,28 @@ export default function PatientDetailScreen() {
               </div>
               <div style={styles.patientInfo}>
                 <h2 style={styles.patientName}>{patientName}</h2>
-                <span style={styles.expBadge}>Expediente: {patientData.Id_exp || routeIdExp}</span>
+                <span style={styles.expBadge}>{t('nursingDetail.record') + ' '}{patientData.Id_exp || routeIdExp}</span>
               </div>
             </div>
 
             <div style={styles.infoGrid}>
               <div style={styles.infoItem}>
-                <span style={styles.infoLabel}>Edad</span>
-                <strong style={styles.infoValue}>{calculateAge(patientData.fecnac)} años</strong>
+                <span style={styles.infoLabel}>{t('nursingDetail.age')}</span>
+                <strong style={styles.infoValue}>{calculateAge(patientData.fecnac)} {t('nursingDetail.years')}</strong>
               </div>
               <div style={styles.infoItem}>
-                <span style={styles.infoLabel}>Fecha ingreso</span>
+                <span style={styles.infoLabel}>{t('nursingDetail.admissionDate')}</span>
                 <strong style={styles.infoValue}>
                   {patientData.fecha ? moment(patientData.fecha).format('DD/MM/YYYY') : 'N/A'}
                 </strong>
               </div>
               <div style={styles.infoItem}>
-                <span style={styles.infoLabel}>Cama</span>
+                <span style={styles.infoLabel}>{t('nursingDetail.bed')}</span>
                 <strong style={styles.infoValue}>{camaData.num_cama} - {camaData.tipo || 'N/A'}</strong>
               </div>
               <div style={styles.infoItem}>
-                <span style={styles.infoLabel}>Diagnóstico</span>
-                <strong style={styles.infoValue}>{patientData.motivo_atn || 'Pendiente'}</strong>
+                <span style={styles.infoLabel}>{t('nursingDetail.diagnosisLabel')}</span>
+                <strong style={styles.infoValue}>{patientData.motivo_atn || t('nursingDetail.pending')}</strong>
               </div>
             </div>
 
@@ -259,7 +262,7 @@ export default function PatientDetailScreen() {
               <div style={styles.warningBox}>
                 <div style={styles.boxTitleRow}>
                   <FiAlertCircle size={16} color="#dc2626" />
-                  <strong style={{ color: '#dc2626' }}>Alergias</strong>
+                  <strong style={{ color: '#dc2626' }}>{t('nursingDetail.allergies')}</strong>
                 </div>
                 <p style={styles.boxText}>{patientData.alergias}</p>
               </div>
@@ -269,11 +272,11 @@ export default function PatientDetailScreen() {
               <div style={styles.infoBoxBlue}>
                 <div style={styles.boxTitleRow}>
                   <MdLocalHospital size={16} color="#2563eb" />
-                  <strong style={{ color: '#2563eb' }}>Médicos tratantes</strong>
+                  <strong style={{ color: '#2563eb' }}>{t('nursingDetail.treatingDoctors')}</strong>
                 </div>
                 <div style={styles.listWrap}>
                   {medicosData.map((med, index) => (
-                    <span key={`${med.doctor || 'medico'}-${index}`} style={styles.listItem}>• {med.doctor || 'Sin nombre'}</span>
+                    <span key={`${med.doctor || 'medico'}-${index}`} style={styles.listItem}>• {med.doctor || t('nursingDetail.noName')}</span>
                   ))}
                 </div>
               </div>
@@ -283,10 +286,10 @@ export default function PatientDetailScreen() {
               <div style={styles.infoBoxGreen}>
                 <div style={styles.boxTitleRow}>
                   <FiUsers size={16} color="#16a34a" />
-                  <strong style={{ color: '#16a34a' }}>Familiar responsable</strong>
+                  <strong style={{ color: '#16a34a' }}>{t('nursingDetail.responsibleFamily')}</strong>
                 </div>
                 <p style={styles.boxText}>
-                  {familiarData.nombre} ({familiarData.parentesco || 'No especificado'})
+                  {familiarData.nombre} ({familiarData.parentesco || t('nursingDetail.notSpecified')})
                 </p>
                 <p style={styles.boxMeta}><FiPhone size={13} /> {familiarData.telefono || 'N/A'}</p>
               </div>
@@ -296,7 +299,7 @@ export default function PatientDetailScreen() {
           <section style={styles.modulesSection}>
             <div style={styles.modulesHeading}>
               <FiActivity size={18} color="#4338ca" />
-              <h3 style={styles.modulesTitle}>Acciones de Enfermería</h3>
+              <h3 style={styles.modulesTitle}>{t('nursingDetail.nursingActions')}</h3>
             </div>
             <div style={styles.modulesGrid}>
               {modules.map((module) => {
@@ -327,7 +330,7 @@ export default function PatientDetailScreen() {
 
           <footer style={styles.footer}>
             <FiShield size={14} />
-            <span>INEO v2.0 - Seguimiento de paciente en enfermería</span>
+            <span>{t('nursingDetail.footer')}</span>
           </footer>
         </>
       )}

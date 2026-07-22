@@ -1,5 +1,6 @@
 import { useCallback, useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
+import { useTranslation } from 'react-i18next';
 import { FiAlertCircle, FiArrowLeft, FiChevronLeft, FiChevronRight, FiRefreshCw, FiShield, FiUser } from 'react-icons/fi';
 import { MdLocalHospital, MdOutlineBed } from 'react-icons/md';
 import { useAuth } from '../../context/AuthContext';
@@ -7,6 +8,7 @@ import { usePatient } from '../../context/PatientContext';
 import api from '../../services/api';
 import moment from 'moment';
 import 'moment/locale/es';
+import 'moment/locale/en-gb';
 
 moment.locale('es');
 
@@ -18,12 +20,6 @@ const CACHE_KEYS = {
   urgencias: 'enfermeria_urgencias',
   hospitalizados: 'enfermeria_hospitalizados',
 };
-
-const sectionConfig = [
-  { key: 'consulta', title: 'Consulta Externa', color: '#4299e1', icon: MdLocalHospital, emptyLabel: 'No hay pacientes en consulta externa.' },
-  { key: 'urgencias', title: 'Urgencias', color: '#f56565', icon: FiAlertCircle, emptyLabel: 'No hay pacientes en urgencias.' },
-  { key: 'hospitalizados', title: 'Hospitalizados', color: '#48bb78', icon: MdOutlineBed, emptyLabel: 'No hay pacientes hospitalizados.' },
-];
 
 function getCachedValue(key) {
   if (typeof window === 'undefined') return null;
@@ -76,6 +72,7 @@ function getTotalPages(data) {
 }
 
 export default function EnfermeriaScreen() {
+  const { t, i18n } = useTranslation();
   const navigate = useNavigate();
   const { user } = useAuth();
   const { selectPatient } = usePatient();
@@ -92,6 +89,10 @@ export default function EnfermeriaScreen() {
   const [loading, setLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
   const [errorMessage, setErrorMessage] = useState('');
+
+  useEffect(() => {
+    moment.locale(i18n.language === 'en' ? 'en-gb' : 'es');
+  }, [i18n.language]);
 
   const loadPatients = useCallback(async (forceRefresh = false) => {
     setLoading(true);
@@ -138,14 +139,14 @@ export default function EnfermeriaScreen() {
           urgencias: cachedUrgencias || [],
           hospitalizados: cachedHospitalizados || [],
         });
-        setErrorMessage('Sin conexión. Se muestran los datos guardados previamente.');
+        setErrorMessage(t('nursing.offlineMessage'));
       } else {
-        setErrorMessage('No se pudieron cargar los pacientes de enfermería.');
+        setErrorMessage(t('nursing.errorMessage'));
       }
     } finally {
       setLoading(false);
     }
-  }, []);
+  }, [t, i18n.language]);
 
   useEffect(() => {
     loadPatients();
@@ -188,6 +189,12 @@ export default function EnfermeriaScreen() {
     setPages((current) => ({ ...current, [key]: nextPage }));
   };
 
+  const sectionConfig = [
+    { key: 'consulta', title: t('nursing.outpatient'), color: '#4299e1', icon: MdLocalHospital, emptyLabel: t('nursing.noOutpatient') },
+    { key: 'urgencias', title: t('nursing.emergency'), color: '#f56565', icon: FiAlertCircle, emptyLabel: t('nursing.noEmergency') },
+    { key: 'hospitalizados', title: t('nursing.hospitalized'), color: '#48bb78', icon: MdOutlineBed, emptyLabel: t('nursing.noHospitalized') },
+  ];
+
   return (
     <div style={styles.page}>
       <div style={styles.header}>
@@ -195,8 +202,8 @@ export default function EnfermeriaScreen() {
           <FiArrowLeft size={20} />
         </button>
         <div>
-          <div style={styles.headerEyebrow}>INEO</div>
-          <h1 style={styles.headerTitle}>Módulo de Enfermería</h1>
+          <div style={styles.headerEyebrow}>{t('nursing.headerEyebrow')}</div>
+          <h1 style={styles.headerTitle}>{t('nursing.headerTitle')}</h1>
         </div>
         <button type="button" onClick={onRefresh} style={styles.iconButton} disabled={refreshing}>
           <FiRefreshCw size={20} style={refreshing ? styles.spinningIcon : undefined} />
@@ -205,16 +212,16 @@ export default function EnfermeriaScreen() {
 
       <div style={styles.heroCard}>
         <div>
-          <p style={styles.heroGreeting}>Hola, Enf. {user?.username || 'Usuario'}</p>
+          <p style={styles.heroGreeting}>{t('nursing.greeting', { name: user?.username || 'User' })}</p>
           <p style={styles.heroDate}>{moment().format('dddd, D [de] MMMM [de] YYYY')}</p>
         </div>
-        <div style={styles.heroPill}>Total de pacientes: {totalPatients}</div>
+        <div style={styles.heroPill}>{t('nursing.totalPatients', { count: totalPatients })}</div>
       </div>
 
       {errorMessage ? <div style={styles.alert}>{errorMessage}</div> : null}
 
       {loading ? (
-        <div style={styles.loadingCard}>Cargando pacientes...</div>
+        <div style={styles.loadingCard}>{t('nursing.loading')}</div>
       ) : (
         sectionConfig.map((section) => {
           const sectionData = patientsByArea[section.key];
@@ -255,15 +262,15 @@ export default function EnfermeriaScreen() {
                         <div style={{ ...styles.cardIcon, backgroundColor: `${section.color}18`, color: section.color }}>
                           {isOccupied ? <FiUser size={24} /> : <MdOutlineBed size={24} />}
                         </div>
-                        <strong style={styles.cardTitle}>Cama {item.num_cama || '--'}</strong>
-                        <span style={styles.cardName}>{isOccupied ? getPatientName(item) : 'Disponible'}</span>
+                        <strong style={styles.cardTitle}>{t('nursing.bed', { num: item.num_cama || '--' })}</strong>
+                        <span style={styles.cardName}>{isOccupied ? getPatientName(item) : t('nursing.available')}</span>
                         <span
                           style={{
                             ...styles.cardStatus,
                             backgroundColor: isOccupied ? section.color : '#94a3b8',
                           }}
                         >
-                          {isOccupied ? 'OCUPADO' : 'DISPONIBLE'}
+                          {isOccupied ? t('nursing.occupied') : t('nursing.availableStatus')}
                         </span>
                       </button>
                     );
@@ -301,7 +308,7 @@ export default function EnfermeriaScreen() {
 
       <footer style={styles.footer}>
         <FiShield size={14} />
-        <span>INEO v2.0 - Sistema de Gestión Hospitalaria</span>
+        <span>{t('nursing.footer')}</span>
       </footer>
     </div>
   );

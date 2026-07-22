@@ -5,8 +5,7 @@ import { usePatient } from '../../context/PatientContext';
 import api from '../../services/api';
 import moment from 'moment';
 import 'moment/locale/es';
-
-moment.locale('es');
+import { useTranslation } from 'react-i18next';
 
 const CACHE_PREFIX = 'ineo_web_cache_medico_vital_signs_';
 const CACHE_TTL = 2 * 60 * 1000;
@@ -44,6 +43,7 @@ function parseNumericValue(value) {
 }
 
 export default function VitalSignsScreen() {
+  const { t, i18n } = useTranslation();
   const navigate = useNavigate();
   const location = useLocation();
   const { selectedPatient } = usePatient();
@@ -55,11 +55,15 @@ export default function VitalSignsScreen() {
   const [errorMessage, setErrorMessage] = useState('');
   const [formData, setFormData] = useState({ ta: '', fc: '', fr: '', temp: '', spo2: '', peso: '', talla: '' });
 
+  useEffect(() => {
+    moment.locale(i18n.language === 'en' ? 'en' : 'es');
+  }, [i18n.language]);
+
   const patientLabel = useMemo(() => `Exp: ${idExp || 'N/A'} | Atención: ${idAtencion || 'N/A'}`, [idAtencion, idExp]);
 
   useEffect(() => {
     if (!idAtencion) {
-      setErrorMessage('Selecciona un paciente antes de registrar signos vitales.');
+      setErrorMessage(t('vitalSigns.selectPatientFirst'));
       return;
     }
 
@@ -108,7 +112,7 @@ export default function VitalSignsScreen() {
   const handleSubmit = async () => {
     const hasData = Object.values(formData).some((value) => value !== '');
     if (!hasData) {
-      window.alert('Ingrese al menos un signo vital');
+      window.alert(t('vitalSigns.enterAtLeastOne'));
       return;
     }
 
@@ -138,39 +142,39 @@ export default function VitalSignsScreen() {
       }
     } catch (error) {
       console.error('Error saving medico vital signs:', error);
-      window.alert(error.response?.data?.error || 'No se pudieron guardar los signos vitales');
+      window.alert(error.response?.data?.error || t('vitalSigns.saveError'));
     } finally {
       setLoading(false);
     }
   };
 
   const fieldConfig = [
-    { key: 'ta', label: 'Presión arterial (TA)', placeholder: '120/80' },
-    { key: 'fc', label: 'Frecuencia cardíaca (FC)', placeholder: 'lpm' },
-    { key: 'fr', label: 'Frecuencia respiratoria (FR)', placeholder: 'rpm' },
-    { key: 'temp', label: 'Temperatura (°C)', placeholder: '36.5' },
-    { key: 'spo2', label: 'SpO2 (%)', placeholder: '98' },
-    { key: 'peso', label: 'Peso (kg)', placeholder: '70' },
-    { key: 'talla', label: 'Talla (m)', placeholder: '1.70' },
+    { key: 'ta', label: t('vitalSigns.ta'), placeholder: '120/80' },
+    { key: 'fc', label: t('vitalSigns.fc'), placeholder: 'lpm' },
+    { key: 'fr', label: t('vitalSigns.fr'), placeholder: 'rpm' },
+    { key: 'temp', label: t('vitalSigns.temp'), placeholder: '36.5' },
+    { key: 'spo2', label: t('vitalSigns.spo2'), placeholder: '98' },
+    { key: 'peso', label: t('vitalSigns.peso'), placeholder: '70' },
+    { key: 'talla', label: t('vitalSigns.talla'), placeholder: '1.70' },
   ];
 
   return (
     <div style={styles.page}>
       <div style={styles.header}>
         <button type="button" onClick={() => navigate(-1)} style={styles.headerButton}><FiArrowLeft size={20} /></button>
-        <div><div style={styles.headerEyebrow}>MÉDICO</div><h1 style={styles.headerTitle}>Signos Vitales</h1></div>
+        <div><div style={styles.headerEyebrow}>MÉDICO</div><h1 style={styles.headerTitle}>{t('vitalSigns.title')}</h1></div>
         <button type="button" onClick={reloadHistory} style={styles.headerActionButton} disabled={!idAtencion || loadingHistory}><FiRefreshCw size={18} /></button>
       </div>
 
       <section style={styles.patientCard}>
         <div style={styles.patientAvatar}><FiUser size={30} color="#fff" /></div>
-        <div><h2 style={styles.patientName}>Paciente seleccionado</h2><p style={styles.patientMeta}>{patientLabel}</p></div>
+        <div><h2 style={styles.patientName}>{t('vitalSigns.selectedPatient')}</h2><p style={styles.patientMeta}>{patientLabel}</p></div>
       </section>
 
       {errorMessage ? <div style={styles.errorCard}>{errorMessage}</div> : null}
 
       <section style={styles.mainCard}>
-        <div style={styles.cardHeader}><FiHeart size={20} /><strong>Nuevo Registro de Signos Vitales</strong></div>
+        <div style={styles.cardHeader}><FiHeart size={20} /><strong>{t('vitalSigns.newRecord')}</strong></div>
         <div style={styles.formGrid}>
           {fieldConfig.map((field) => (
             <label key={field.key} style={styles.fieldGroup}>
@@ -186,15 +190,15 @@ export default function VitalSignsScreen() {
           ))}
         </div>
         <div style={styles.cardFooter}>
-          <button type="button" style={styles.cancelButton} onClick={() => navigate(-1)}>Regresar</button>
-          <button type="button" style={styles.saveButton} onClick={handleSubmit} disabled={!idAtencion || loading}><FiSave size={18} /><span>{loading ? 'Guardando...' : 'Guardar signos vitales'}</span></button>
+          <button type="button" style={styles.cancelButton} onClick={() => navigate(-1)}>{t('vitalSigns.back')}</button>
+          <button type="button" style={styles.saveButton} onClick={handleSubmit} disabled={!idAtencion || loading}><FiSave size={18} /><span>{loading ? t('vitalSigns.saving') : t('vitalSigns.save')}</span></button>
         </div>
       </section>
 
       <section style={styles.historyCard}>
-        <div style={styles.historyHeader}><FiActivity size={18} /><strong>Historial de Signos Vitales</strong><span style={styles.historyCount}>{history.length} registros</span></div>
+        <div style={styles.historyHeader}><FiActivity size={18} /><strong>{t('vitalSigns.history')}</strong><span style={styles.historyCount}>{history.length} {t('vitalSigns.registros')}</span></div>
         <div style={styles.historyBody}>
-          {loadingHistory ? <div style={styles.statusBox}>Cargando historial...</div> : history.length === 0 ? <div style={styles.statusBox}>No hay registros previos.</div> : history.map((item, index) => (
+          {loadingHistory ? <div style={styles.statusBox}>{t('vitalSigns.loadingHistory')}</div> : history.length === 0 ? <div style={styles.statusBox}>{t('vitalSigns.noRecords')}</div> : history.map((item, index) => (
             <article key={item.id_signos || `${item.fecha_registro || 'sv'}-${index}`} style={styles.historyItem}>
               <div style={styles.historyDate}>{moment(item.fecha_registro).format('DD/MM/YYYY HH:mm')}</div>
               <div style={styles.historyGrid}>
@@ -211,7 +215,7 @@ export default function VitalSignsScreen() {
         </div>
       </section>
 
-      <footer style={styles.footer}><FiShield size={14} /><span>INEO v2.0 - Registro de signos vitales</span></footer>
+      <footer style={styles.footer}><FiShield size={14} /><span>{t('vitalSigns.footer')}</span></footer>
     </div>
   );
 }

@@ -1,4 +1,5 @@
 import { useNavigate } from 'react-router-dom';
+import { useTranslation } from 'react-i18next';
 import {
   FiDatabase,
   FiHardDrive,
@@ -11,53 +12,54 @@ import { MdLocalHospital } from 'react-icons/md';
 import './ConfigStyles.css';
 
 export default function ConfigScreen() {
+  const { t } = useTranslation();
   const navigate = useNavigate();
 
   const cards = [
     {
-      title: 'Gestión de Camas',
-      desc: 'Administra la disponibilidad y asignación de camas hospitalarias',
-      badge: 'ADMINISTRADOR',
+      title: t('config.bedManagement'),
+      desc: t('config.bedManagementDesc'),
+      badge: t('config.admin'),
       icon: <MdLocalHospital />,
       color: '#3182ce',
       path: '/config/camas',
     },
     {
-      title: 'Gestión de Personal',
-      desc: 'Administra usuarios, roles y permisos del sistema',
-      badge: 'ADMINISTRADOR',
+      title: t('config.staffManagement'),
+      desc: t('config.staffManagementDesc'),
+      badge: t('config.admin'),
       icon: <FiUsers />,
       color: '#38a169',
       path: '/config/usuarios',
     },
     {
-      title: 'Diagnósticos',
-      desc: 'Catálogo de diagnósticos y códigos CIE-10',
-      badge: 'MÉDICO',
+      title: t('config.diagnoses'),
+      desc: t('config.diagnosesDesc'),
+      badge: t('config.medical'),
       icon: <FiTrendingUp />,
       color: '#ed8936',
       path: '/config/diagnosticos',
     },
     {
-      title: 'Servicios',
-      desc: 'Catálogo de servicios y procedimientos médicos',
-      badge: 'CATÁLOGO',
+      title: t('config.services'),
+      desc: t('config.servicesDesc'),
+      badge: t('config.catalog'),
       icon: <FiPlus />,
       color: '#f56565',
       path: '/config/servicios',
     },
     {
-      title: 'Copias de Seguridad',
-      desc: 'Respaldo y restauración de la base de datos',
-      badge: 'ADMINISTRADOR',
+      title: t('config.backups'),
+      desc: t('config.backupsDesc'),
+      badge: t('config.admin'),
       icon: <FiShield />,
       color: '#805ad5',
       path: '/config/backup',
     },
     {
-      title: 'Rendimiento',
-      desc: 'Monitoreo de CPU, RAM, disco y actividad del sistema',
-      badge: 'MONITOREO',
+      title: t('config.performance'),
+      desc: t('config.performanceDesc'),
+      badge: t('config.monitoring'),
       icon: <FiTrendingUp />,
       color: '#38b2ac',
       path: '/config/automatizacion',
@@ -68,9 +70,9 @@ export default function ConfigScreen() {
     <main style={styles.page}>
       <section style={styles.hero}>
         <div>
-          <h1 style={styles.title}>Configuración del Sistema</h1>
+          <h1 style={styles.title}>{t('config.title')}</h1>
           <p style={styles.subtitle}>
-            Administra módulos, catálogos, usuarios, respaldos y parámetros del sistema INEO.
+            {t('config.subtitle')}
           </p>
         </div>
       </section>
