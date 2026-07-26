@@ -1,8 +1,8 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
+import { FiArrowLeft, FiUpload, FiTrash2, FiSave, FiFile } from 'react-icons/fi';
 import api from '../services/api';
 import { invalidateCachePrefix, removeCache } from '../services/EstudiosCache';
-import './EditResultForm.css';
 
 const CACHE_KEYS = {
   counts: 'estudios_counts',
@@ -33,7 +33,7 @@ export default function EditResultForm() {
   useEffect(() => {
     const loadInfo = async () => {
       if (!id_examen) {
-        setError('Falta el ID del examen');
+        setError('Missing exam ID');
         setLoading(false);
         return;
       }
@@ -57,8 +57,8 @@ export default function EditResultForm() {
         setArchivosAEliminar(eliminarState);
         setError('');
       } catch (err) {
-        console.error('Error cargando info:', err);
-        setError('No se pudo cargar la información.');
+        console.error('Error loading info:', err);
+        setError('Could not load information.');
       } finally {
         setLoading(false);
       }
@@ -78,11 +78,11 @@ export default function EditResultForm() {
       .filter((file) => {
         const ext = file.name.split('.').pop().toLowerCase();
         if (!validExtensions.includes(ext)) {
-          alert(`El archivo "${file.name}" tiene formato no permitido.`);
+          alert(`File "${file.name}" has an invalid format.`);
           return false;
         }
         if (file.size > MAX_SIZE) {
-          alert(`El archivo "${file.name}" excede 25MB.`);
+          alert(`File "${file.name}" exceeds 25MB.`);
           return false;
         }
         return true;
@@ -116,7 +116,7 @@ export default function EditResultForm() {
     );
 
     if (archivosExistentes.length === 0 && nuevosArchivos.length === 0) {
-      alert('Debe mantener al menos un archivo o agregar uno nuevo.');
+      alert('You must keep at least one file or add a new one.');
       return;
     }
 
@@ -144,16 +144,16 @@ export default function EditResultForm() {
         timeout: 60000,
       });
 
-      // Invalidar solo cachés de este tipo
+      // Invalidate only caches of this type
       await invalidateCachePrefix(`estudios_all_${tipo}_`);
       await removeCache(CACHE_KEYS.counts);
       await removeCache(CACHE_KEYS.examenInfo(id_examen));
 
-      alert('Cambios guardados correctamente.');
+      alert('Changes saved successfully.');
       navigate(`/estudios?initialSection=${returnSection}`);
     } catch (err) {
-      console.error('Error al actualizar:', err);
-      let msg = 'Error al actualizar los resultados.';
+      console.error('Error updating:', err);
+      let msg = 'Error updating results.';
       if (err.response?.data?.error) {
         msg = err.response.data.error;
       } else if (err.message) {
@@ -167,122 +167,362 @@ export default function EditResultForm() {
 
   if (loading) {
     return (
-      <div className="er-centered">
-        <div className="er-spinner"></div>
-        <p className="er-loading-text">Cargando datos...</p>
+      <div style={styles.page}>
+        <div style={styles.centered}>
+          <div style={styles.spinner}></div>
+          <span style={styles.loadingText}>Loading data...</span>
+        </div>
       </div>
     );
   }
 
   if (error) {
     return (
-      <div className="er-centered">
-        <p className="er-error-text">{error}</p>
-        <button className="er-retry-btn" onClick={() => navigate(-1)}>
-          Regresar
-        </button>
+      <div style={styles.page}>
+        <div style={styles.centered}>
+          <p style={styles.errorText}>{error}</p>
+          <button style={styles.retryBtn} onClick={() => navigate(-1)}>
+            Go Back
+          </button>
+        </div>
       </div>
     );
   }
 
   return (
-    <div className="er-container">
-      <div className="er-header">
-        <button className="er-back-btn" onClick={() => navigate(-1)}>
-          ←
-        </button>
-        <h1 className="er-header-title">Editar Resultados</h1>
-        <div style={{ width: 40 }}></div>
-      </div>
-
-      <div className="er-content">
-        <div className="er-card">
-          <div className="er-info-row">
-            <span className="er-label">Paciente:</span>
-            <span className="er-value">{info.paciente}</span>
+    <>
+      <style>{`
+        @keyframes spin {
+          0% { transform: rotate(0deg); }
+          100% { transform: rotate(360deg); }
+        }
+      `}</style>
+      <div style={styles.page}>
+        {/* Header */}
+        <div style={styles.header}>
+          <button type="button" onClick={() => navigate(-1)} style={styles.headerButton}>
+            <FiArrowLeft size={20} />
+          </button>
+          <div>
+            <div style={styles.headerEyebrow}>Results</div>
+            <h1 style={styles.headerTitle}>Edit Results</h1>
           </div>
-          <div className="er-info-row">
-            <span className="er-label">Habitación:</span>
-            <span className="er-value">{info.habitacion}</span>
+          <div style={{ width: 44 }}></div>
+        </div>
+
+        {/* Content */}
+        <div style={styles.content}>
+          {/* Patient info card */}
+          <div style={styles.card}>
+            <div style={styles.infoRow}>
+              <span style={styles.label}>Patient:</span>
+              <span style={styles.value}>{info.paciente}</span>
+            </div>
+            <div style={styles.infoRow}>
+              <span style={styles.label}>Room:</span>
+              <span style={styles.value}>{info.habitacion}</span>
+            </div>
           </div>
+
+          {/* Existing files card */}
+          <div style={styles.card}>
+            <h3 style={styles.sectionTitle}>Existing Files</h3>
+            {info.archivos.length === 0 ? (
+              <p style={styles.emptyText}>No files registered.</p>
+            ) : (
+              <ul style={styles.fileList}>
+                {info.archivos.map((nombre) => (
+                  <li key={nombre} style={styles.fileItem}>
+                    <FiFile style={styles.fileIcon} />
+                    <span style={styles.fileName}>{nombre}</span>
+                    <label style={styles.switchLabel}>
+                      <input
+                        type="checkbox"
+                        checked={archivosAEliminar[nombre] || false}
+                        onChange={() => toggleEliminar(nombre)}
+                        style={styles.checkbox}
+                      />
+                      <span style={styles.switchText}>Delete</span>
+                    </label>
+                  </li>
+                ))}
+              </ul>
+            )}
+          </div>
+
+          {/* Add new files card */}
+          <div style={styles.card}>
+            <h3 style={styles.sectionTitle}>Add New Files</h3>
+            <input
+              type="file"
+              multiple
+              accept=".pdf,.png,.jpg,.jpeg"
+              onChange={handleFileChange}
+              style={styles.fileInput}
+            />
+            {nuevosArchivos.length > 0 && (
+              <ul style={styles.fileList}>
+                {nuevosArchivos.map((item) => (
+                  <li key={item.id} style={styles.fileItem}>
+                    <FiFile style={styles.fileIcon} />
+                    <span style={styles.fileName}>{item.name}</span>
+                    <span style={styles.fileSize}>
+                      {(item.size / 1024 / 1024).toFixed(2)} MB
+                    </span>
+                    <button
+                      style={styles.removeBtn}
+                      onClick={() => removeNuevoArchivo(item.id)}
+                    >
+                      ✕
+                    </button>
+                  </li>
+                ))}
+              </ul>
+            )}
+            <p style={styles.hint}>Formats: PDF, PNG, JPG, JPEG (max 25MB)</p>
+          </div>
+
+          {/* Observations card */}
+          <div style={styles.card}>
+            <h3 style={styles.sectionTitle}>Observations</h3>
+            <textarea
+              style={styles.textarea}
+              rows="4"
+              placeholder="Relevant observations..."
+              value={info.observaciones}
+              onChange={(e) => setInfo({ ...info, observaciones: e.target.value })}
+            />
+          </div>
+
+          {/* Submit button */}
+          <button
+            style={{
+              ...styles.submitBtn,
+              opacity: submitting ? 0.7 : 1,
+              cursor: submitting ? 'default' : 'pointer',
+            }}
+            onClick={handleSubmit}
+            disabled={submitting}
+          >
+            {submitting ? (
+              <div style={styles.spinnerSmall}></div>
+            ) : (
+              <>
+                <FiSave size={18} /> Save Changes
+              </>
+            )}
+          </button>
         </div>
 
-        <div className="er-card">
-          <h3 className="er-section-title">Archivos existentes</h3>
-          {info.archivos.length === 0 ? (
-            <p className="er-empty-text">No hay archivos registrados.</p>
-          ) : (
-            <ul className="er-file-list">
-              {info.archivos.map((nombre) => (
-                <li key={nombre} className="er-file-item">
-                  <span className="er-file-name">{nombre}</span>
-                  <label className="er-switch-label">
-                    <input
-                      type="checkbox"
-                      checked={archivosAEliminar[nombre] || false}
-                      onChange={() => toggleEliminar(nombre)}
-                    />
-                    <span>Eliminar</span>
-                  </label>
-                </li>
-              ))}
-            </ul>
-          )}
-        </div>
-
-        <div className="er-card">
-          <h3 className="er-section-title">Agregar nuevos archivos</h3>
-          <input
-            type="file"
-            multiple
-            accept=".pdf,.png,.jpg,.jpeg"
-            onChange={handleFileChange}
-            className="er-file-input"
-          />
-          {nuevosArchivos.length > 0 && (
-            <ul className="er-file-list">
-              {nuevosArchivos.map((item) => (
-                <li key={item.id} className="er-file-item">
-                  <span className="er-file-name">📄 {item.name}</span>
-                  <span className="er-file-size">
-                    {(item.size / 1024 / 1024).toFixed(2)} MB
-                  </span>
-                  <button
-                    className="er-remove-btn"
-                    onClick={() => removeNuevoArchivo(item.id)}
-                  >
-                    ✕
-                  </button>
-                </li>
-              ))}
-            </ul>
-          )}
-          <p className="er-hint">Formatos: PDF, PNG, JPG, JPEG (máx 25MB)</p>
-        </div>
-
-        <div className="er-card">
-          <h3 className="er-section-title">Observaciones</h3>
-          <textarea
-            className="er-textarea"
-            rows="4"
-            placeholder="Observaciones relevantes..."
-            value={info.observaciones}
-            onChange={(e) => setInfo({ ...info, observaciones: e.target.value })}
-          />
-        </div>
-
-        <button
-          className={`er-submit-btn ${submitting ? 'er-disabled' : ''}`}
-          onClick={handleSubmit}
-          disabled={submitting}
-        >
-          {submitting ? (
-            <span className="er-spinner-small"></span>
-          ) : (
-            '💾 Guardar Cambios'
-          )}
-        </button>
+        <footer style={styles.footer}>
+          <FiArrowLeft size={14} style={{ transform: 'rotate(180deg)' }} />
+          <span>Secure data • All rights reserved</span>
+        </footer>
       </div>
-    </div>
+    </>
   );
 }
+
+const styles = {
+  page: {
+    minHeight: '100%',
+    padding: '24px',
+    background: 'linear-gradient(180deg, #f8fafc 0%, #eef2ff 100%)',
+  },
+  header: {
+    display: 'flex',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    gap: '16px',
+    padding: '20px 24px',
+    borderRadius: '20px',
+    background: 'linear-gradient(135deg, #2563eb 0%, #7c3aed 100%)',
+    color: '#fff',
+    boxShadow: '0 18px 50px rgba(79, 70, 229, 0.22)',
+  },
+  headerButton: {
+    width: '44px',
+    height: '44px',
+    border: '1px solid rgba(255,255,255,0.28)',
+    borderRadius: '12px',
+    background: 'rgba(255,255,255,0.12)',
+    color: '#fff',
+    display: 'grid',
+    placeItems: 'center',
+    cursor: 'pointer',
+  },
+  headerEyebrow: { fontSize: '12px', letterSpacing: '0.18em', textTransform: 'uppercase', opacity: 0.8, marginBottom: '4px' },
+  headerTitle: { margin: 0, fontSize: '28px', fontWeight: 800 },
+  content: {
+    marginTop: '20px',
+    display: 'flex',
+    flexDirection: 'column',
+    gap: '18px',
+  },
+  card: {
+    padding: '20px 24px',
+    backgroundColor: '#fff',
+    borderRadius: '20px',
+    boxShadow: '0 12px 32px rgba(15, 23, 42, 0.08)',
+  },
+  infoRow: {
+    display: 'flex',
+    gap: '12px',
+    padding: '6px 0',
+    fontSize: '15px',
+  },
+  label: {
+    fontWeight: 600,
+    color: '#64748b',
+    minWidth: '80px',
+  },
+  value: {
+    color: '#1e293b',
+    fontWeight: 500,
+  },
+  sectionTitle: {
+    fontSize: '18px',
+    fontWeight: 700,
+    color: '#1e293b',
+    margin: '0 0 14px 0',
+  },
+  fileList: {
+    listStyle: 'none',
+    padding: 0,
+    margin: 0,
+    display: 'flex',
+    flexDirection: 'column',
+    gap: '8px',
+  },
+  fileItem: {
+    display: 'flex',
+    alignItems: 'center',
+    gap: '10px',
+    padding: '10px 14px',
+    backgroundColor: '#f8fafc',
+    borderRadius: '12px',
+  },
+  fileIcon: { color: '#64748b', fontSize: '18px' },
+  fileName: { flex: 1, fontSize: '14px', fontWeight: 500, color: '#1e293b' },
+  fileSize: { fontSize: '13px', color: '#64748b' },
+  switchLabel: {
+    display: 'flex',
+    alignItems: 'center',
+    gap: '6px',
+    fontSize: '13px',
+    color: '#64748b',
+    cursor: 'pointer',
+  },
+  checkbox: { width: '16px', height: '16px', accentColor: '#ef4444' },
+  switchText: { fontWeight: 500 },
+  fileInput: {
+    display: 'block',
+    width: '100%',
+    padding: '10px 12px',
+    borderRadius: '12px',
+    border: '1px dashed #cbd5e1',
+    backgroundColor: '#f8fafc',
+    fontSize: '14px',
+    cursor: 'pointer',
+    transition: 'border 0.2s',
+    outline: 'none',
+    marginBottom: '12px',
+  },
+  removeBtn: {
+    background: 'transparent',
+    border: 'none',
+    color: '#ef4444',
+    cursor: 'pointer',
+    padding: '4px 6px',
+    borderRadius: '8px',
+    fontSize: '16px',
+    fontWeight: 700,
+  },
+  hint: {
+    marginTop: '10px',
+    fontSize: '13px',
+    color: '#94a3b8',
+  },
+  emptyText: {
+    color: '#94a3b8',
+    fontSize: '14px',
+    textAlign: 'center',
+    padding: '12px 0',
+  },
+  textarea: {
+    width: '100%',
+    padding: '12px 14px',
+    borderRadius: '12px',
+    border: '1px solid #000000ff',
+    fontSize: '14px',
+    fontFamily: 'inherit',
+    resize: 'vertical',
+    backgroundColor: '#f8fafc',
+    transition: 'border 0.2s',
+    outline: 'none',
+    color: '#000000ff',
+  },
+  submitBtn: {
+    padding: '14px 24px',
+    borderRadius: '999px',
+    border: 'none',
+    backgroundColor: '#48bb78',
+    color: '#fff',
+    fontWeight: 700,
+    fontSize: '16px',
+    display: 'inline-flex',
+    alignItems: 'center',
+    justifyContent: 'center',
+    gap: '8px',
+    width: '100%',
+    maxWidth: '300px',
+    alignSelf: 'center',
+    transition: 'background 0.2s, opacity 0.2s',
+    cursor: 'pointer',
+  },
+  footer: {
+    marginTop: '28px',
+    display: 'flex',
+    alignItems: 'center',
+    justifyContent: 'center',
+    gap: '8px',
+    color: '#64748b',
+    fontSize: '13px',
+  },
+  centered: {
+    display: 'flex',
+    flexDirection: 'column',
+    alignItems: 'center',
+    justifyContent: 'center',
+    minHeight: '50vh',
+    gap: '16px',
+  },
+  spinner: {
+    width: '40px',
+    height: '40px',
+    borderRadius: '50%',
+    border: '4px solid #e2e8f0',
+    borderTopColor: '#2563eb',
+    animation: 'spin 0.8s linear infinite',
+  },
+  spinnerSmall: {
+    width: '20px',
+    height: '20px',
+    borderRadius: '50%',
+    border: '3px solid rgba(255,255,255,0.3)',
+    borderTopColor: '#fff',
+    animation: 'spin 0.8s linear infinite',
+  },
+  loadingText: { color: '#64748b', fontSize: '16px' },
+  errorText: { color: '#dc2626', fontSize: '16px', textAlign: 'center' },
+  retryBtn: {
+    padding: '10px 24px',
+    borderRadius: '999px',
+    border: 'none',
+    backgroundColor: '#4299e1',
+    color: '#fff',
+    fontWeight: 600,
+    cursor: 'pointer',
+    fontSize: '15px',
+  },
+};

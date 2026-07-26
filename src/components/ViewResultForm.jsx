@@ -2,7 +2,6 @@ import React, { useState, useEffect } from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
 import { FiArrowLeft, FiEye, FiFolder, FiFile } from 'react-icons/fi';
 import api from '../services/api';
-import './ViewResultForm.css';
 
 export default function ViewResultForm() {
   const navigate = useNavigate();
@@ -22,7 +21,7 @@ export default function ViewResultForm() {
   useEffect(() => {
     const loadFiles = async () => {
       if (!id_examen) {
-        setError('Falta el ID del examen');
+        setError('Missing exam ID');
         setLoading(false);
         return;
       }
@@ -38,8 +37,8 @@ export default function ViewResultForm() {
         }
         setError('');
       } catch (err) {
-        console.error('Error cargando archivos:', err);
-        setError('No se pudieron cargar los archivos.');
+        console.error('Error loading files:', err);
+        setError('Could not load files.');
       } finally {
         setLoading(false);
       }
@@ -51,15 +50,15 @@ export default function ViewResultForm() {
     setSelectedFile(file);
   };
 
-  // Renderizado de la vista previa
+  // Render preview
   const renderPreview = () => {
     if (!selectedFile) {
       return (
-        <div className="vr-preview-placeholder">
-          <FiFile size={64} color="#cbd5e0" />
-          <p className="vr-placeholder-text">Selecciona un archivo</p>
-          <p className="vr-placeholder-subtext">
-            Haz clic en un archivo de la lista para previsualizarlo
+        <div style={styles.previewPlaceholder}>
+          <FiFile size={48} color="#cbd5e0" />
+          <p style={styles.placeholderText}>Select a file</p>
+          <p style={styles.placeholderSubtext}>
+            Click a file from the list to preview it
           </p>
         </div>
       );
@@ -70,22 +69,22 @@ export default function ViewResultForm() {
 
     if (ext === 'pdf') {
       return (
-        <div className="vr-pdf-preview">
-          <div className="vr-pdf-icon-wrapper">
-            <FiFile size={80} color="#667eea" />
+        <div style={styles.previewPdf}>
+          <div style={styles.pdfIconWrapper}>
+            <FiFile size={56} color="#667eea" />
           </div>
-          <p className="vr-pdf-name">{selectedFile.nombre}</p>
-          <div className="vr-pdf-badge">PDF</div>
-          <p className="vr-pdf-info">Vista previa solo para visualización</p>
+          <p style={styles.pdfName}>{selectedFile.nombre}</p>
+          <div style={styles.pdfBadge}>PDF</div>
+          <p style={styles.pdfInfo}>Preview available for viewing</p>
         </div>
       );
     } else if (['png', 'jpg', 'jpeg', 'gif'].includes(ext)) {
       return (
-        <div className="vr-image-container">
+        <div style={styles.imageContainer}>
           <img
             src={fileUrl}
             alt={selectedFile.nombre}
-            className="vr-preview-image"
+            style={styles.previewImage}
             onError={(e) => {
               e.target.onerror = null;
               e.target.src = '';
@@ -95,11 +94,11 @@ export default function ViewResultForm() {
       );
     } else {
       return (
-        <div className="vr-preview-placeholder">
+        <div style={styles.previewPlaceholder}>
           <FiFile size={48} color="#a0aec0" />
-          <p className="vr-placeholder-text">Formato no soportado</p>
-          <p className="vr-placeholder-subtext">
-            No se puede mostrar vista previa de este tipo de archivo.
+          <p style={styles.placeholderText}>Format not supported</p>
+          <p style={styles.placeholderSubtext}>
+            Cannot preview this file type.
           </p>
         </div>
       );
@@ -108,76 +107,303 @@ export default function ViewResultForm() {
 
   if (loading) {
     return (
-      <div className="vr-centered">
-        <div className="vr-spinner"></div>
-        <p className="vr-loading-text">Cargando archivos...</p>
+      <div style={styles.page}>
+        <div style={styles.centered}>
+          <div style={styles.spinner}></div>
+          <span style={styles.loadingText}>Loading files...</span>
+        </div>
       </div>
     );
   }
 
   if (error) {
     return (
-      <div className="vr-centered">
-        <FiFile size={48} color="#e53e3e" />
-        <p className="vr-error-text">{error}</p>
-        <button className="vr-retry-btn" onClick={() => navigate(-1)}>
-          Regresar
-        </button>
+      <div style={styles.page}>
+        <div style={styles.centered}>
+          <FiFile size={48} color="#e53e3e" />
+          <p style={styles.errorText}>{error}</p>
+          <button style={styles.retryBtn} onClick={() => navigate(-1)}>
+            Go Back
+          </button>
+        </div>
       </div>
     );
   }
 
   return (
-    <div className="vr-container">
+    <div style={styles.page}>
       {/* Header */}
-      <div className="vr-header">
-        <button className="vr-back-btn" onClick={() => navigate(-1)}>
-          <FiArrowLeft size={28} />
+      <div style={styles.header}>
+        <button type="button" onClick={() => navigate(-1)} style={styles.headerButton}>
+          <FiArrowLeft size={20} />
         </button>
-        <h1 className="vr-header-title">Ver Resultados</h1>
+        <div>
+          <div style={styles.headerEyebrow}>Results</div>
+          <h1 style={styles.headerTitle}>View Results</h1>
+        </div>
         <div style={{ width: 44 }}></div>
       </div>
 
-      <div className="vr-main">
-        {/* Lista de archivos */}
-        <div className="vr-list-container">
-          <div className="vr-section-header">
-            <FiFolder size={20} color="#4a5568" />
-            <span className="vr-section-title">Archivos disponibles</span>
-            <span className="vr-badge">{archivos.length}</span>
+      {/* Main content: two columns */}
+      <div style={styles.main}>
+        {/* File list card */}
+        <div style={styles.cardList}>
+          <div style={styles.sectionHeader}>
+            <FiFolder size={20} color="#64748b" />
+            <span style={styles.sectionTitle}>Available Files</span>
+            <span style={styles.badge}>{archivos.length}</span>
           </div>
-          <div className="vr-file-list">
+          <div style={styles.fileList}>
             {archivos.length === 0 ? (
-              <p className="vr-empty-text">No hay archivos registrados.</p>
+              <p style={styles.emptyText}>No files registered.</p>
             ) : (
               archivos.map((file, index) => (
                 <button
                   key={index}
-                  className={`vr-file-item ${
-                    selectedFile?.nombre === file.nombre ? 'vr-active' : ''
-                  }`}
+                  style={{
+                    ...styles.fileItem,
+                    ...(selectedFile?.nombre === file.nombre ? styles.fileItemActive : {}),
+                  }}
                   onClick={() => handleSelectFile(file)}
                 >
-                  <span className="vr-file-icon">
+                  <span style={styles.fileIcon}>
                     {file.tipo === 'pdf' ? '📄' : '🖼️'}
                   </span>
-                  <span className="vr-file-name">{file.nombre}</span>
-                  <span className="vr-file-badge">{file.tipo.toUpperCase()}</span>
+                  <span style={styles.fileName}>{file.nombre}</span>
+                  <span style={styles.fileBadge}>{file.tipo.toUpperCase()}</span>
                 </button>
               ))
             )}
           </div>
         </div>
 
-        {/* Vista previa */}
-        <div className="vr-preview-container">
-          <div className="vr-section-header">
-            <FiEye size={20} color="#4a5568" />
-            <span className="vr-section-title">Vista previa</span>
+        {/* Preview card */}
+        <div style={styles.cardPreview}>
+          <div style={styles.sectionHeader}>
+            <FiEye size={20} color="#64748b" />
+            <span style={styles.sectionTitle}>Preview</span>
           </div>
-          <div className="vr-preview-box">{renderPreview()}</div>
+          <div style={styles.previewBox}>{renderPreview()}</div>
         </div>
       </div>
+
+      <footer style={styles.footer}>
+        <FiArrowLeft size={14} style={{ transform: 'rotate(180deg)' }} />
+        <span>Secure data • All rights reserved</span>
+      </footer>
     </div>
   );
 }
+
+const styles = {
+  page: {
+    minHeight: '100%',
+    padding: '24px',
+    background: 'linear-gradient(180deg, #f8fafc 0%, #eef2ff 100%)',
+  },
+  header: {
+    display: 'flex',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    gap: '16px',
+    padding: '20px 24px',
+    borderRadius: '20px',
+    background: 'linear-gradient(135deg, #2563eb 0%, #7c3aed 100%)',
+    color: '#fff',
+    boxShadow: '0 18px 50px rgba(79, 70, 229, 0.22)',
+  },
+  headerButton: {
+    width: '44px',
+    height: '44px',
+    border: '1px solid rgba(255,255,255,0.28)',
+    borderRadius: '12px',
+    background: 'rgba(255,255,255,0.12)',
+    color: '#fff',
+    display: 'grid',
+    placeItems: 'center',
+    cursor: 'pointer',
+  },
+  headerEyebrow: { fontSize: '12px', letterSpacing: '0.18em', textTransform: 'uppercase', opacity: 0.8, marginBottom: '4px' },
+  headerTitle: { margin: 0, fontSize: '28px', fontWeight: 800 },
+  main: {
+    marginTop: '20px',
+    display: 'flex',
+    gap: '20px',
+    flexWrap: 'wrap',
+  },
+  cardList: {
+    flex: '1 1 300px',
+    minWidth: '260px',
+    padding: '20px 24px',
+    backgroundColor: '#fff',
+    borderRadius: '20px',
+    boxShadow: '0 12px 32px rgba(15, 23, 42, 0.08)',
+    display: 'flex',
+    flexDirection: 'column',
+  },
+  cardPreview: {
+    flex: '2 1 400px',
+    minWidth: '300px',
+    padding: '20px 24px',
+    backgroundColor: '#fff',
+    borderRadius: '20px',
+    boxShadow: '0 12px 32px rgba(15, 23, 42, 0.08)',
+    display: 'flex',
+    flexDirection: 'column',
+  },
+  sectionHeader: {
+    display: 'flex',
+    alignItems: 'center',
+    gap: '10px',
+    marginBottom: '16px',
+    paddingBottom: '12px',
+    borderBottom: '1px solid #e2e8f0',
+  },
+  sectionTitle: {
+    fontSize: '16px',
+    fontWeight: 700,
+    color: '#1e293b',
+  },
+  badge: {
+    marginLeft: 'auto',
+    padding: '2px 10px',
+    borderRadius: '999px',
+    backgroundColor: '#dbeafe',
+    color: '#1d4ed8',
+    fontWeight: 700,
+    fontSize: '14px',
+  },
+  fileList: {
+    display: 'flex',
+    flexDirection: 'column',
+    gap: '6px',
+    flex: 1,
+    overflowY: 'auto',
+    maxHeight: '400px',
+  },
+  fileItem: {
+    display: 'flex',
+    alignItems: 'center',
+    gap: '10px',
+    padding: '10px 14px',
+    borderRadius: '12px',
+    border: '1px solid transparent',
+    background: '#f8fafc',
+    cursor: 'pointer',
+    transition: 'all 0.2s',
+    textAlign: 'left',
+    width: '100%',
+    fontFamily: 'inherit',
+  },
+  fileItemActive: {
+    borderColor: '#2563eb',
+    backgroundColor: '#eff6ff',
+    boxShadow: '0 0 0 1px #2563eb',
+  },
+  fileIcon: { fontSize: '20px' },
+  fileName: {
+    flex: 1,
+    fontSize: '14px',
+    fontWeight: 500,
+    color: '#1e293b',
+    wordBreak: 'break-word',
+  },
+  fileBadge: {
+    padding: '2px 10px',
+    borderRadius: '999px',
+    backgroundColor: '#e2e8f0',
+    color: '#475569',
+    fontSize: '11px',
+    fontWeight: 700,
+    textTransform: 'uppercase',
+  },
+  emptyText: { color: '#94a3b8', fontSize: '14px', textAlign: 'center', padding: '20px 0' },
+  previewBox: {
+    flex: 1,
+    display: 'flex',
+    alignItems: 'center',
+    justifyContent: 'center',
+    minHeight: '300px',
+    backgroundColor: '#f8fafc',
+    borderRadius: '16px',
+    padding: '16px',
+  },
+  previewPlaceholder: {
+    textAlign: 'center',
+    color: '#94a3b8',
+  },
+  placeholderText: { fontSize: '18px', fontWeight: 600, color: '#64748b', marginTop: '8px' },
+  placeholderSubtext: { fontSize: '14px', color: '#94a3b8', marginTop: '4px' },
+  previewPdf: {
+    textAlign: 'center',
+  },
+  pdfIconWrapper: {
+    display: 'inline-block',
+    padding: '16px',
+    backgroundColor: '#e0e7ff',
+    borderRadius: '16px',
+    marginBottom: '12px',
+  },
+  pdfName: { fontSize: '16px', fontWeight: 600, color: '#1e293b', marginBottom: '4px' },
+  pdfBadge: {
+    display: 'inline-block',
+    padding: '4px 12px',
+    borderRadius: '999px',
+    backgroundColor: '#dc2626',
+    color: '#fff',
+    fontWeight: 700,
+    fontSize: '13px',
+  },
+  pdfInfo: { fontSize: '14px', color: '#64748b', marginTop: '12px' },
+  imageContainer: {
+    width: '100%',
+    height: '100%',
+    display: 'flex',
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  previewImage: {
+    maxWidth: '100%',
+    maxHeight: '400px',
+    borderRadius: '12px',
+    objectFit: 'contain',
+  },
+  footer: {
+    marginTop: '28px',
+    display: 'flex',
+    alignItems: 'center',
+    justifyContent: 'center',
+    gap: '8px',
+    color: '#64748b',
+    fontSize: '13px',
+  },
+  centered: {
+    display: 'flex',
+    flexDirection: 'column',
+    alignItems: 'center',
+    justifyContent: 'center',
+    minHeight: '50vh',
+    gap: '16px',
+  },
+  spinner: {
+    width: '40px',
+    height: '40px',
+    borderRadius: '50%',
+    border: '4px solid #e2e8f0',
+    borderTopColor: '#2563eb',
+    animation: 'spin 0.8s linear infinite',
+  },
+  loadingText: { color: '#64748b', fontSize: '16px' },
+  errorText: { color: '#dc2626', fontSize: '16px', textAlign: 'center' },
+  retryBtn: {
+    padding: '10px 24px',
+    borderRadius: '999px',
+    border: 'none',
+    backgroundColor: '#4299e1',
+    color: '#fff',
+    fontWeight: 600,
+    cursor: 'pointer',
+    fontSize: '15px',
+  },
+};
+

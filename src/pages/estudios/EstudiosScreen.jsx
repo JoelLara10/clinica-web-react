@@ -1,6 +1,5 @@
 import React, { useState, useEffect, useCallback, useRef } from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
-import { useTranslation } from 'react-i18next';
 import { useAuth } from '../../context/AuthContext';
 import api from '../../services/api';
 import {
@@ -20,22 +19,20 @@ import {
   FiTrash2,
 } from 'react-icons/fi';
 import { FaFlask, FaChartBar, FaClipboardList, FaFolderOpen } from 'react-icons/fa';
-import './EstudiosScreen.css';
 
-const PAGE_SIZE = 5;
+const PAGE_SIZE = 6;
 const FETCH_ALL_LIMIT = 9999;
 
 export default function EstudiosScreen() {
-  const { t } = useTranslation();
   const navigate = useNavigate();
   const location = useLocation();
   const { user } = useAuth();
 
   const SECTIONS = [
-    { id: 'solicitudes_lab', label: t('studies.labRequests'), icon: <FaFlask /> },
-    { id: 'solicitudes_gab', label: t('studies.imagingRequests'), icon: <FaChartBar /> },
-    { id: 'resultados_lab', label: t('studies.labResults'), icon: <FaClipboardList /> },
-    { id: 'resultados_gab', label: t('studies.imagingResults'), icon: <FaFolderOpen /> },
+    { id: 'solicitudes_lab', label: 'Lab Requests', icon: <FaFlask />, color: '#4299e1' },
+    { id: 'solicitudes_gab', label: 'Imaging Requests', icon: <FaChartBar />, color: '#ed8936' },
+    { id: 'resultados_lab', label: 'Lab Results', icon: <FaClipboardList />, color: '#48bb78' },
+    { id: 'resultados_gab', label: 'Imaging Results', icon: <FaFolderOpen />, color: '#9f7aea' },
   ];
 
   const SECTION_CONFIG = {
@@ -67,17 +64,17 @@ export default function EstudiosScreen() {
     paciente:
       typeof item.paciente === 'string'
         ? item.paciente
-        : item.paciente?.nombre || item.nombre_paciente || t('studies.patient'),
+        : item.paciente?.nombre || item.nombre_paciente || 'Patient',
     medico:
       typeof item.medico === 'string'
         ? item.medico
-        : item.medico?.nombre || item.nombre_medico || t('studies.noDoctor'),
+        : item.medico?.nombre || item.nombre_medico || 'Doctor',
     estudios: Array.isArray(item.estudios)
       ? item.estudios.join(', ')
-      : item.estudios || t('studies.noStudies'),
+      : item.estudios || 'No studies',
     fecha: item.fecha_solicitud || item.fecha || null,
     fecha_realizado: item.fecha_realizado || null,
-    habitacion: item.habitacion || item.numero_habitacion || item.cama || t('studies.noInfo'),
+    habitacion: item.habitacion || item.numero_habitacion || item.cama || 'N/A',
   });
 
   const loadAllData = useCallback(
@@ -85,7 +82,7 @@ export default function EstudiosScreen() {
       const config = SECTION_CONFIG[selectedSection];
       if (!config) {
         setAllItems([]);
-        setError(t('studies.invalidSection'));
+        setError('Invalid section');
         return;
       }
 
@@ -128,14 +125,14 @@ export default function EstudiosScreen() {
         setAllItems(normalized);
         setCurrentPage(1);
       } catch (err) {
-        const errorMsg = err.response?.data?.error || t('studies.errorLoading');
+        const errorMsg = err.response?.data?.error || 'Error loading data';
         setError(errorMsg);
         setAllItems([]);
       } finally {
         setLoading(false);
       }
     },
-    [selectedSection, t]
+    [selectedSection]
   );
 
   const loadCounts = useCallback(
@@ -214,7 +211,8 @@ export default function EstudiosScreen() {
 
   const handleDelete = (id_examen) => {
     const tipo = selectedSection.includes('lab') ? 'laboratorio' : 'gabinete';
-    if (!window.confirm(t('studies.confirmDelete', { tipo }))) return;
+    const tipoDisplay = tipo === 'laboratorio' ? 'laboratory' : 'imaging';
+    if (!window.confirm(`Are you sure you want to delete this ${tipoDisplay} result?`)) return;
 
     if (deleting) return;
     setDeleting(true);
@@ -223,7 +221,7 @@ export default function EstudiosScreen() {
       try {
         await api.delete(`/exams/${id_examen}/results?type=${tipo}`);
 
-        alert(t('studies.deleteSuccess', { tipo }));
+        alert(`Delete successful for ${tipoDisplay} result`);
 
         const tipoUpper = tipo.toUpperCase();
         await invalidateCachePrefix(`estudios_all_${tipoUpper}_`);
@@ -234,8 +232,8 @@ export default function EstudiosScreen() {
           loadCounts(true),
         ]);
       } catch (error) {
-        console.error('Error al eliminar:', error);
-        let msg = t('studies.deleteError');
+        console.error('Error deleting:', error);
+        let msg = 'Error deleting result';
         if (error.response?.data?.error) {
           msg = error.response.data.error;
         }
@@ -257,140 +255,141 @@ export default function EstudiosScreen() {
   const totalPages = Math.ceil(allItems.length / PAGE_SIZE);
   const paginatedItems = getPaginatedItems();
 
-  const renderItem = (item) => (
-    <div className="est-card" key={item.id_examen}>
-      <div className="est-card-header">
-        <div className="est-avatar">{String(item.paciente).charAt(0)}</div>
-        <div className="est-card-info">
-          <div className="est-patient-name">{item.paciente}</div>
-          <div className="est-patient-detail">🛏️ {item.habitacion}</div>
+  const renderItem = (item) => {
+    const sectionColor = SECTIONS.find(s => s.id === selectedSection)?.color || '#4299e1';
+    return (
+      <div key={item.id_examen} style={{ ...styles.card, borderLeftColor: sectionColor }}>
+        <div style={styles.cardHeader}>
+          <div style={styles.avatar}>{String(item.paciente).charAt(0)}</div>
+          <div style={styles.cardInfo}>
+            <div style={styles.patientName}>{item.paciente}</div>
+            <div style={styles.patientDetail}>🛏️ {item.habitacion}</div>
+          </div>
+          {!isPending && <div style={styles.completedBadge}>✅</div>}
         </div>
-        {!isPending && <div className="est-completed-badge">✅</div>}
-      </div>
 
-      <div className="est-card-body">
-        <div className="est-info-row">
-          <span className="est-info-icon">🔬</span>
-          <span className="est-exams-list">{item.estudios}</span>
-        </div>
-        <div className="est-info-row">
-          <span className="est-info-icon">📅</span>
-          <span className="est-date-text">
-            {t('studies.requested')} {item.fecha ? new Date(item.fecha).toLocaleDateString() : t('studies.dateNotAvailable')}
-          </span>
-        </div>
-        {!isPending && item.fecha_realizado && (
-          <div className="est-info-row">
-            <span className="est-info-icon">✅</span>
-            <span className="est-date-text">
-              {t('studies.completed')} {new Date(item.fecha_realizado).toLocaleDateString()}
+        <div style={styles.cardBody}>
+          <div style={styles.infoRow}>
+            <span style={styles.infoIcon}>🔬</span>
+            <span style={styles.examsList}>{item.estudios}</span>
+          </div>
+          <div style={styles.infoRow}>
+            <span style={styles.infoIcon}>📅</span>
+            <span style={styles.dateText}>
+              Requested {item.fecha ? new Date(item.fecha).toLocaleDateString() : 'Date not available'}
             </span>
           </div>
-        )}
-      </div>
+          {!isPending && item.fecha_realizado && (
+            <div style={styles.infoRow}>
+              <span style={styles.infoIcon}>✅</span>
+              <span style={styles.dateText}>
+                Completed {new Date(item.fecha_realizado).toLocaleDateString()}
+              </span>
+            </div>
+          )}
+        </div>
 
-      <div className="est-action-row">
-        {isPending ? (
-          <button className="est-btn est-btn-upload" onClick={() => handleUpload(item)}>
-            <FiUpload /> {t('studies.upload')}
-          </button>
-        ) : (
-          <>
-            <button className="est-btn est-btn-view" onClick={() => handleView(item.id_examen)}>
-              <FiEye /> {t('studies.view')}
+        <div style={styles.actionRow}>
+          {isPending ? (
+            <button style={styles.btnUpload} onClick={() => handleUpload(item)}>
+              <FiUpload size={16} /> Upload
             </button>
-            <button className="est-btn est-btn-edit" onClick={() => handleEdit(item.id_examen)}>
-              <FiEdit /> {t('studies.edit')}
-            </button>
-            <button 
-              className="est-btn est-btn-delete" 
-              onClick={() => handleDelete(item.id_examen)}
-              disabled={deleting}
-            >
-              <FiTrash2 /> {t('studies.delete')}
-            </button>
-          </>
-        )}
+          ) : (
+            <>
+              <button style={styles.btnView} onClick={() => handleView(item.id_examen)}>
+                <FiEye size={16} /> View
+              </button>
+              <button style={styles.btnEdit} onClick={() => handleEdit(item.id_examen)}>
+                <FiEdit size={16} /> Edit
+              </button>
+              <button 
+                style={{ ...styles.btnDelete, opacity: deleting ? 0.6 : 1 }}
+                onClick={() => handleDelete(item.id_examen)}
+                disabled={deleting}
+              >
+                <FiTrash2 size={16} /> Delete
+              </button>
+            </>
+          )}
+        </div>
       </div>
-    </div>
-  );
+    );
+  };
 
   const renderEmpty = () => (
-    <div className="est-empty">
-      <div className="est-empty-emoji">📭</div>
-      <div className="est-empty-text">
-        {isPending ? t('studies.noPendingRequests') : t('studies.noResults')}
+    <div style={styles.emptyCard}>
+      <div style={styles.emptyEmoji}>📭</div>
+      <div style={styles.emptyText}>
+        {isPending ? 'No pending requests' : 'No results'}
       </div>
-      <div className="est-empty-subtext">
-        {isPending ? t('studies.allCompleted') : t('studies.noResultsUploaded')}
+      <div style={styles.emptySubtext}>
+        {isPending ? 'All requests have been completed' : 'No results have been uploaded yet'}
       </div>
     </div>
   );
 
   return (
-    <div className="est-container">
-      <div className="est-header">
-        <button className="est-back-btn" onClick={() => navigate(-1)}>
-          <FiArrowLeft />
+    <div style={styles.page}>
+      <div style={styles.header}>
+        <button type="button" onClick={() => navigate(-1)} style={styles.headerButton}>
+          <FiArrowLeft size={20} />
         </button>
-        <h1 className="est-header-title">🔬 {t('studies.headerTitle')}</h1>
-        <button className="est-refresh-btn" onClick={onRefresh} disabled={refreshing}>
-          <FiRefreshCw className={refreshing ? 'est-spin' : ''} />
+        <div>
+          <div style={styles.headerEyebrow}>Studies</div>
+          <h1 style={styles.headerTitle}>Study Management</h1>
+        </div>
+        <button type="button" onClick={onRefresh} style={styles.headerButton} disabled={refreshing}>
+          <FiRefreshCw size={20} className={refreshing ? 'spin' : ''} />
         </button>
       </div>
 
-      <div className="est-stats">
-        <div className="est-stat-box">
-          <span className="est-stat-emoji">🧪</span>
-          <span className="est-stat-number">{counts.laboratorio}</span>
-          <span className="est-stat-label">{t('studies.laboratory')}</span>
+      <div style={styles.heroCard}>
+        <div>
+          <p style={styles.heroGreeting}>Welcome back, {user?.username || 'User'}</p>
+          <p style={styles.heroDate}>{new Date().toLocaleDateString('en-US', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' })}</p>
         </div>
-        <div className="est-stat-box">
-          <span className="est-stat-emoji">📊</span>
-          <span className="est-stat-number">{counts.gabinete}</span>
-          <span className="est-stat-label">{t('studies.imaging')}</span>
-        </div>
-        <div className="est-stat-box">
-          <span className="est-stat-emoji">⚠️</span>
-          <span className="est-stat-number">{counts.total}</span>
-          <span className="est-stat-label">{t('studies.totalPending')}</span>
-        </div>
+        <div style={styles.heroPill}>Total Pending: {counts.total}</div>
       </div>
 
-      <div className="est-tabs-wrapper">
-        <div className="est-tabs">
-          {SECTIONS.map((section) => (
+      {error ? <div style={styles.alert}>{error}</div> : null}
+
+      <div style={styles.tabsWrapper}>
+        {SECTIONS.map((section) => {
+          const isActive = selectedSection === section.id;
+          return (
             <button
               key={section.id}
-              className={`est-tab ${selectedSection === section.id ? 'est-tab-active' : ''}`}
+              style={{
+                ...styles.tab,
+                ...(isActive ? styles.tabActive : {}),
+                ...(isActive ? { borderBottomColor: section.color } : {}),
+              }}
               onClick={() => {
                 setSelectedSection(section.id);
                 skipFocusRefresh.current = true;
               }}
             >
-              <span className="est-tab-icon">{section.icon}</span>
-              <span className="est-tab-label">{section.label}</span>
+              <span style={styles.tabIcon}>{section.icon}</span>
+              <span style={styles.tabLabel}>{section.label}</span>
+              {isActive && <span style={{ ...styles.tabBadge, backgroundColor: section.color }}>{allItems.length}</span>}
             </button>
-          ))}
-        </div>
+          );
+        })}
       </div>
 
-      <div className="est-list-area">
+      <div style={styles.listArea}>
         {error ? (
-          <div className="est-empty">
-            <div className="est-empty-emoji">⚠️</div>
-            <div className="est-empty-text">{error}</div>
+          <div style={styles.emptyCard}>
+            <div style={styles.emptyEmoji}>⚠️</div>
+            <div style={styles.emptyText}>{error}</div>
           </div>
         ) : loading && allItems.length === 0 ? (
-          <div className="est-loading">
-            <div className="est-spinner"></div>
-            <div>{t('studies.loading')}</div>
-          </div>
+          <div style={styles.loadingCard}>Loading...</div>
         ) : allItems.length === 0 ? (
           renderEmpty()
         ) : (
           <>
-            <div className="est-list">
+            <div style={styles.grid}>
               {paginatedItems.map((item) => renderItem(item))}
             </div>
             {totalPages > 1 && (
@@ -405,6 +404,237 @@ export default function EstudiosScreen() {
           </>
         )}
       </div>
+
+      <footer style={styles.footer}>
+        <FiArrowLeft size={14} style={{ transform: 'rotate(180deg)' }} />
+        <span>Secure data • All rights reserved</span>
+      </footer>
     </div>
   );
 }
+
+const styles = {
+  page: {
+    minHeight: '100%',
+    padding: '24px',
+    background: 'linear-gradient(180deg, #f8fafc 0%, #eef2ff 100%)',
+  },
+  header: {
+    display: 'flex',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    gap: '16px',
+    padding: '20px 24px',
+    borderRadius: '20px',
+    background: 'linear-gradient(135deg, #2563eb 0%, #7c3aed 100%)',
+    color: '#fff',
+    boxShadow: '0 18px 50px rgba(79, 70, 229, 0.22)',
+  },
+  headerButton: {
+    width: '44px',
+    height: '44px',
+    border: '1px solid rgba(255,255,255,0.28)',
+    borderRadius: '12px',
+    background: 'rgba(255,255,255,0.12)',
+    color: '#fff',
+    display: 'grid',
+    placeItems: 'center',
+    cursor: 'pointer',
+  },
+  headerEyebrow: { fontSize: '12px', letterSpacing: '0.18em', textTransform: 'uppercase', opacity: 0.8, marginBottom: '4px' },
+  headerTitle: { margin: 0, fontSize: '28px', fontWeight: 800 },
+  heroCard: {
+    marginTop: '20px',
+    padding: '20px 24px',
+    backgroundColor: '#fff',
+    borderRadius: '20px',
+    display: 'flex',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    gap: '16px',
+    boxShadow: '0 12px 32px rgba(15, 23, 42, 0.08)',
+  },
+  heroGreeting: { margin: 0, fontSize: '22px', fontWeight: 700 },
+  heroDate: { margin: '6px 0 0', color: '#64748b' },
+  heroPill: { padding: '10px 16px', borderRadius: '999px', backgroundColor: '#dbeafe', color: '#1d4ed8', fontWeight: 700, whiteSpace: 'nowrap' },
+  alert: { marginTop: '18px', padding: '14px 16px', borderRadius: '14px', backgroundColor: '#fff7ed', border: '1px solid #fdba74', color: '#9a3412' },
+  tabsWrapper: {
+    marginTop: '22px',
+    display: 'flex',
+    gap: '8px',
+    backgroundColor: 'transparent',
+    padding: '0',
+    overflowX: 'auto',
+  },
+  tab: {
+    flex: '1 0 auto',
+    padding: '10px 18px',
+    borderRadius: '12px',
+    border: '1px solid #e2e8f0',
+    background: '#ffffff',
+    display: 'flex',
+    alignItems: 'center',
+    gap: '8px',
+    fontWeight: 600,
+    color: '#1e293b',
+    cursor: 'pointer',
+    transition: 'all 0.2s',
+    position: 'relative',
+    borderBottom: '3px solid transparent',
+    boxShadow: '0 1px 3px rgba(0,0,0,0.06)',
+  },
+  tabActive: {
+    background: '#f1f5f9',
+    borderColor: '#cbd5e1',
+    borderBottomWidth: '3px',
+    boxShadow: '0 4px 8px rgba(0,0,0,0.05)',
+  },
+  tabIcon: { fontSize: '18px' },
+  tabLabel: { fontSize: '14px', whiteSpace: 'nowrap' },
+  tabBadge: {
+    marginLeft: '6px',
+    padding: '2px 8px',
+    borderRadius: '999px',
+    color: '#fff',
+    fontSize: '12px',
+    fontWeight: 700,
+  },
+  listArea: { marginTop: '18px' },
+  grid: {
+    display: 'grid',
+    gridTemplateColumns: 'repeat(auto-fill, minmax(320px, 1fr))',
+    gap: '18px',
+  },
+  card: {
+    backgroundColor: '#fff',
+    borderRadius: '18px',
+    boxShadow: '0 8px 24px rgba(15, 23, 42, 0.06)',
+    padding: '18px',
+    borderLeft: '6px solid',
+    transition: 'transform 0.2s, box-shadow 0.2s',
+    display: 'flex',
+    flexDirection: 'column',
+  },
+  cardHeader: {
+    display: 'flex',
+    alignItems: 'center',
+    gap: '12px',
+    marginBottom: '14px',
+  },
+  avatar: {
+    width: '44px',
+    height: '44px',
+    borderRadius: '12px',
+    backgroundColor: '#e2e8f0',
+    display: 'grid',
+    placeItems: 'center',
+    fontWeight: 700,
+    fontSize: '18px',
+    color: '#475569',
+  },
+  cardInfo: { flex: 1 },
+  patientName: { fontWeight: 700, fontSize: '16px' },
+  patientDetail: { fontSize: '14px', color: '#64748b' },
+  completedBadge: { fontSize: '20px' },
+  cardBody: {
+    flex: 1,
+    marginBottom: '16px',
+  },
+  infoRow: {
+    display: 'flex',
+    alignItems: 'center',
+    gap: '8px',
+    marginBottom: '6px',
+    fontSize: '14px',
+    color: '#334155',
+  },
+  infoIcon: { fontSize: '16px', width: '24px', textAlign: 'center' },
+  examsList: { wordBreak: 'break-word' },
+  dateText: { color: '#64748b' },
+  actionRow: {
+    display: 'flex',
+    gap: '8px',
+    flexWrap: 'wrap',
+    borderTop: '1px solid #e2e8f0',
+    paddingTop: '14px',
+  },
+  btnUpload: {
+    padding: '8px 16px',
+    borderRadius: '999px',
+    border: 'none',
+    backgroundColor: '#4299e1',
+    color: '#fff',
+    fontWeight: 600,
+    display: 'flex',
+    alignItems: 'center',
+    gap: '6px',
+    cursor: 'pointer',
+    fontSize: '13px',
+  },
+  btnView: {
+    padding: '8px 16px',
+    borderRadius: '999px',
+    border: 'none',
+    backgroundColor: '#48bb78',
+    color: '#fff',
+    fontWeight: 600,
+    display: 'flex',
+    alignItems: 'center',
+    gap: '6px',
+    cursor: 'pointer',
+    fontSize: '13px',
+  },
+  btnEdit: {
+    padding: '8px 16px',
+    borderRadius: '999px',
+    border: 'none',
+    backgroundColor: '#ed8936',
+    color: '#fff',
+    fontWeight: 600,
+    display: 'flex',
+    alignItems: 'center',
+    gap: '6px',
+    cursor: 'pointer',
+    fontSize: '13px',
+  },
+  btnDelete: {
+    padding: '8px 16px',
+    borderRadius: '999px',
+    border: 'none',
+    backgroundColor: '#fc8181',
+    color: '#fff',
+    fontWeight: 600,
+    display: 'flex',
+    alignItems: 'center',
+    gap: '6px',
+    cursor: 'pointer',
+    fontSize: '13px',
+  },
+  emptyCard: {
+    padding: '40px 20px',
+    textAlign: 'center',
+    backgroundColor: '#fff',
+    borderRadius: '18px',
+    boxShadow: '0 8px 24px rgba(15, 23, 42, 0.06)',
+  },
+  emptyEmoji: { fontSize: '48px', marginBottom: '12px' },
+  emptyText: { fontSize: '18px', fontWeight: 600, color: '#1e293b' },
+  emptySubtext: { fontSize: '14px', color: '#94a3b8', marginTop: '4px' },
+  loadingCard: {
+    padding: '32px',
+    textAlign: 'center',
+    backgroundColor: '#fff',
+    borderRadius: '20px',
+    boxShadow: '0 12px 32px rgba(15, 23, 42, 0.08)',
+    color: '#64748b',
+  },
+  footer: {
+    marginTop: '28px',
+    display: 'flex',
+    alignItems: 'center',
+    justifyContent: 'center',
+    gap: '8px',
+    color: '#64748b',
+    fontSize: '13px',
+  },
+};
