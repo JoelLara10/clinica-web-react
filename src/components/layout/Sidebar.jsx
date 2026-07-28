@@ -60,6 +60,7 @@ export default function Sidebar({ isOpen, onClose }) {
   const currentModule = currentPath.startsWith('/enfermeria') ? 'enfermeria'
     : currentPath.startsWith('/medico') ? 'medico'
     : currentPath.startsWith('/estudios') ? 'estudios'
+    : currentPath.startsWith('/config') ? 'config'
     : 'general';
 
   const handleNav = (path) => {
@@ -136,7 +137,22 @@ export default function Sidebar({ isOpen, onClose }) {
     });
   }
 
-  if (isEstudios || isAdmin) {
+  if (isAdmin && currentModule === 'config') {
+    menuSections.push({
+      title: 'Configuración',
+      items: [
+        { name: 'Usuarios',       icon: 'options-outline',  path: '/config/usuarios',       requiresPatient: false },
+        { name: 'Diagnósticos',    icon: 'clipboard-outline', path: '/config/diagnosticos',   requiresPatient: false },
+        { name: 'Camas',          icon: 'medkit-outline',   path: '/config/camas',          requiresPatient: false },
+        { name: 'Servicios',      icon: 'clipboard-outline',path: '/config/servicios',      requiresPatient: false },
+        { name: 'Automatización', icon: 'pulse-outline',    path: '/config/automatizacion', requiresPatient: false },
+        { name: 'Backup',         icon: 'folder-open-outline', path: '/config/backup',      requiresPatient: false },
+        { name: 'Mi Perfil',      icon: 'home-outline',     path: '/config/perfil',         requiresPatient: false },
+      ],
+    });
+  }
+
+  if ((isEstudios || isAdmin) && currentModule === 'estudios') {
     menuSections.push({
       title: t('sidebar.studies'),
       items: [

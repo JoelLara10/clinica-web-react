@@ -44,6 +44,7 @@ import GeneralSettingsScreen from '../pages/config/GeneralSettingsScreen';
 import UsuariosConfigScreen from '../pages/config/UsuariosConfigScreen';
 import CamasConfigScreen from '../pages/config/CamasConfigScreen';
 import ServiciosConfigScreen from '../pages/config/ServiciosConfigScreen';
+import DiagnosticosConfigScreen from '../pages/config/DiagnosticosConfigScreen';
 import AutomationConfigScreen from '../pages/config/AutomationConfigScreen';
 import BackupConfigScreen from '../pages/config/BackupConfigScreen';
 import ProfileConfigScreen from '../pages/config/ProfileConfigScreen';
@@ -167,7 +168,7 @@ export default function AppRouter() {
                     <Route path="config/camas" element={<CamasConfigScreen />} />
                     <Route path="config/servicios" element={<ServiciosConfigScreen />} />
 
-                    <Route path="config/diagnosticos" element={<DiagnosisScreen />} />
+                    <Route path="config/diagnosticos" element={<DiagnosticosConfigScreen />} />
 
                     <Route path="config/automatizacion" element={<AutomationConfigScreen />} />
                     <Route path="config/backup" element={<BackupConfigScreen />} />

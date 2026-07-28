@@ -1,13 +1,59 @@
-import { useState } from 'react';
-import { FiSave } from 'react-icons/fi';
+import { useEffect, useState } from 'react';
+import { FiClock, FiSave } from 'react-icons/fi';
 import ConfigHeader from './ConfigHeader';
-import { readPermanent, savePermanent } from './configCache';
+import backupService from '../../services/backupService';
 import './ConfigStyles.css';
+import './BackupStyles.css';
 
-const defaults = { respaldosAutomaticos:true, horaRespaldo:'22:00', limpiarTemporales:true, diasRetencion:'30', notificaciones:true, rendimiento:true };
+const defaults = { activo: false, tipo: 'completa', formato: 'json', intervalo: 1440, max_backups: 4, colecciones: [] };
 
-export default function AutomationConfigScreen(){
- const [form,setForm]=useState(()=>readPermanent('automatizacion',defaults)); const [msg,setMsg]=useState('');
- const save=(e)=>{e.preventDefault();savePermanent('automatizacion',form);setMsg('Automatización guardada en caché.')};
- return <main className="config-page"><ConfigHeader title="Automatización de tareas"/><section className="config-content"><form className="config-card config-main-card" onSubmit={save}><div className="config-card-header"><h2>⏱️ Automatización de tareas</h2></div><div className="config-card-body"><div className="config-section-box"><h3 className="config-subtitle">Respaldos automáticos</h3><label className="config-row"><span>Activar respaldos automáticos</span><input className="config-switch" type="checkbox" checked={form.respaldosAutomaticos} onChange={e=>setForm({...form,respaldosAutomaticos:e.target.checked})}/></label><label className="config-label">Hora del respaldo</label><input className="config-input" type="time" value={form.horaRespaldo} onChange={e=>setForm({...form,horaRespaldo:e.target.value})}/></div><div className="config-section-box"><h3 className="config-subtitle">Limpieza local</h3><label className="config-row"><span>Limpiar temporales automáticamente</span><input className="config-switch" type="checkbox" checked={form.limpiarTemporales} onChange={e=>setForm({...form,limpiarTemporales:e.target.checked})}/></label><label className="config-label">Días de retención</label><input className="config-input" type="number" value={form.diasRetencion} onChange={e=>setForm({...form,diasRetencion:e.target.value})}/></div><div className="config-section-box"><h3 className="config-subtitle">Sistema</h3><label className="config-row"><span>Notificaciones del sistema</span><input className="config-switch" type="checkbox" checked={form.notificaciones} onChange={e=>setForm({...form,notificaciones:e.target.checked})}/></label><label className="config-row"><span>Monitoreo de rendimiento</span><input className="config-switch" type="checkbox" checked={form.rendimiento} onChange={e=>setForm({...form,rendimiento:e.target.checked})}/></label></div><div className="config-form-footer"><button className="config-btn success" type="submit"><FiSave/>Guardar configuración</button></div>{msg&&<div className="config-alert success">{msg}</div>}</div></form></section></main>
+export default function AutomationConfigScreen() {
+  const [form, setForm] = useState(defaults);
+  const [collections, setCollections] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [message, setMessage] = useState('');
+
+  useEffect(() => {
+    Promise.all([backupService.getAutomation(), backupService.collections()])
+      .then(([config, names]) => {
+        setForm({ ...defaults, ...config, colecciones: config.colecciones?.length ? config.colecciones : names });
+        setCollections(names);
+      })
+      .catch((error) => setMessage(error.response?.data?.error || 'No se pudo cargar la automatización.'))
+      .finally(() => setLoading(false));
+  }, []);
+
+  const toggleCollection = (name) => setForm((current) => ({
+    ...current,
+    colecciones: current.colecciones.includes(name)
+      ? current.colecciones.filter((item) => item !== name)
+      : [...current.colecciones, name],
+  }));
+
+  const save = async (event) => {
+    event.preventDefault();
+    setLoading(true);
+    try {
+      const result = await backupService.updateAutomation(form);
+      setForm(result);
+      setMessage(result.activo ? 'Automatización guardada y activada.' : 'Automatización guardada y desactivada.');
+    } catch (error) {
+      setMessage(error.response?.data?.error || 'No se pudo guardar la automatización.');
+    } finally { setLoading(false); }
+  };
+
+  return <main className="config-page"><ConfigHeader title="Automatización de Respaldos" /><section className="config-content"><form className="config-card config-main-card" onSubmit={save}>
+    <div className="config-card-header"><FiClock size={26} /><h2>Programar respaldos automáticos</h2></div><div className="config-card-body">
+      <div className="config-section-box"><label className="config-toggle-row"><span><strong>Activar respaldos automáticos</strong><small>El servidor ejecutará la tarea aunque la página esté cerrada.</small></span><input className="config-switch" type="checkbox" checked={form.activo} onChange={(e) => setForm({ ...form, activo: e.target.checked })} /></label></div>
+      <div className="config-section-box"><h3 className="config-subtitle">Programación</h3><div className="config-grid-3">
+        <div><label className="config-label">Tipo</label><select className="config-select" value={form.tipo} onChange={(e) => setForm({ ...form, tipo: e.target.value })}><option value="completa">Completa</option><option value="incremental">Incremental</option><option value="diferencial">Diferencial</option></select></div>
+        <div><label className="config-label">Formato</label><select className="config-select" value={form.formato} onChange={(e) => setForm({ ...form, formato: e.target.value })}><option value="json">JSON</option><option value="csv">CSV (ZIP)</option><option value="xlsx">Excel (.xlsx)</option><option value="pdf">PDF</option></select></div>
+        <div><label className="config-label">Intervalo en minutos</label><input className="config-input" type="number" min="5" max="525600" value={form.intervalo} onChange={(e) => setForm({ ...form, intervalo: Number(e.target.value) })} /><small className="config-help">60 = cada hora, 1440 = diario</small></div>
+        <div><label className="config-label">Máximo por tipo</label><input className="config-input" type="number" min="1" max="50" value={form.max_backups} onChange={(e) => setForm({ ...form, max_backups: Number(e.target.value) })} /></div>
+      </div></div>
+      <div className="config-section-box"><h3 className="config-subtitle">Colecciones incluidas</h3><div className="config-checkbox-grid">{collections.map((name) => <label className="config-check-card" key={name}><input type="checkbox" checked={form.colecciones.includes(name)} onChange={() => toggleCollection(name)} /><span>{name}</span></label>)}</div></div>
+      <div className="config-form-footer"><button className="config-btn success" type="submit" disabled={loading}><FiSave /> {loading ? 'Guardando...' : 'Guardar automatización'}</button></div>
+      {message && <div className="config-alert">{message}</div>}
+    </div>
+  </form></section></main>;
 }
