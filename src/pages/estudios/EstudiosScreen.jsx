@@ -1,6 +1,7 @@
 import React, { useState, useEffect, useCallback, useRef } from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
 import { useAuth } from '../../context/AuthContext';
+import { useTranslation } from 'react-i18next';
 import api from '../../services/api';
 import {
   getCache,
@@ -27,12 +28,13 @@ export default function EstudiosScreen() {
   const navigate = useNavigate();
   const location = useLocation();
   const { user } = useAuth();
+  const { t, i18n } = useTranslation();
 
   const SECTIONS = [
-    { id: 'solicitudes_lab', label: 'Lab Requests', icon: <FaFlask />, color: '#4299e1' },
-    { id: 'solicitudes_gab', label: 'Imaging Requests', icon: <FaChartBar />, color: '#ed8936' },
-    { id: 'resultados_lab', label: 'Lab Results', icon: <FaClipboardList />, color: '#48bb78' },
-    { id: 'resultados_gab', label: 'Imaging Results', icon: <FaFolderOpen />, color: '#9f7aea' },
+    { id: 'solicitudes_lab', label: t('studies.labRequests'), icon: <FaFlask />, color: '#4299e1' },
+    { id: 'solicitudes_gab', label: t('studies.imagingRequests'), icon: <FaChartBar />, color: '#ed8936' },
+    { id: 'resultados_lab', label: t('studies.labResults'), icon: <FaClipboardList />, color: '#48bb78' },
+    { id: 'resultados_gab', label: t('studies.imagingResults'), icon: <FaFolderOpen />, color: '#9f7aea' },
   ];
 
   const SECTION_CONFIG = {
@@ -64,14 +66,14 @@ export default function EstudiosScreen() {
     paciente:
       typeof item.paciente === 'string'
         ? item.paciente
-        : item.paciente?.nombre || item.nombre_paciente || 'Patient',
+        : item.paciente?.nombre || item.nombre_paciente || t('studies.patient'),
     medico:
       typeof item.medico === 'string'
         ? item.medico
-        : item.medico?.nombre || item.nombre_medico || 'Doctor',
+        : item.medico?.nombre || item.nombre_medico || t('studies.doctor'),
     estudios: Array.isArray(item.estudios)
       ? item.estudios.join(', ')
-      : item.estudios || 'No studies',
+      : item.estudios || t('studies.noStudies'),
     fecha: item.fecha_solicitud || item.fecha || null,
     fecha_realizado: item.fecha_realizado || null,
     habitacion: item.habitacion || item.numero_habitacion || item.cama || 'N/A',
@@ -82,7 +84,7 @@ export default function EstudiosScreen() {
       const config = SECTION_CONFIG[selectedSection];
       if (!config) {
         setAllItems([]);
-        setError('Invalid section');
+        setError(t('studies.invalidSection'));
         return;
       }
 
@@ -125,14 +127,14 @@ export default function EstudiosScreen() {
         setAllItems(normalized);
         setCurrentPage(1);
       } catch (err) {
-        const errorMsg = err.response?.data?.error || 'Error loading data';
+        const errorMsg = err.response?.data?.error || t('studies.loadError');
         setError(errorMsg);
         setAllItems([]);
       } finally {
         setLoading(false);
       }
     },
-    [selectedSection]
+    [selectedSection, t]
   );
 
   const loadCounts = useCallback(
@@ -211,8 +213,8 @@ export default function EstudiosScreen() {
 
   const handleDelete = (id_examen) => {
     const tipo = selectedSection.includes('lab') ? 'laboratorio' : 'gabinete';
-    const tipoDisplay = tipo === 'laboratorio' ? 'laboratory' : 'imaging';
-    if (!window.confirm(`Are you sure you want to delete this ${tipoDisplay} result?`)) return;
+    const tipoDisplay = tipo === 'laboratorio' ? t('studies.laboratory') : t('studies.imaging');
+    if (!window.confirm(t('studies.deleteConfirm', { type: tipoDisplay }))) return;
 
     if (deleting) return;
     setDeleting(true);
@@ -221,7 +223,7 @@ export default function EstudiosScreen() {
       try {
         await api.delete(`/exams/${id_examen}/results?type=${tipo}`);
 
-        alert(`Delete successful for ${tipoDisplay} result`);
+        alert(t('studies.deleteSuccess', { type: tipoDisplay }));
 
         const tipoUpper = tipo.toUpperCase();
         await invalidateCachePrefix(`estudios_all_${tipoUpper}_`);
@@ -233,7 +235,7 @@ export default function EstudiosScreen() {
         ]);
       } catch (error) {
         console.error('Error deleting:', error);
-        let msg = 'Error deleting result';
+        let msg = t('studies.deleteError');
         if (error.response?.data?.error) {
           msg = error.response.data.error;
         }
@@ -276,14 +278,14 @@ export default function EstudiosScreen() {
           <div style={styles.infoRow}>
             <span style={styles.infoIcon}>📅</span>
             <span style={styles.dateText}>
-              Requested {item.fecha ? new Date(item.fecha).toLocaleDateString() : 'Date not available'}
+              {t('studies.requested')} {item.fecha ? new Date(item.fecha).toLocaleDateString(i18n.language === 'en' ? 'en-US' : 'es-MX') : t('studies.dateUnavailable')}
             </span>
           </div>
           {!isPending && item.fecha_realizado && (
             <div style={styles.infoRow}>
               <span style={styles.infoIcon}>✅</span>
               <span style={styles.dateText}>
-                Completed {new Date(item.fecha_realizado).toLocaleDateString()}
+                {t('studies.completed')} {new Date(item.fecha_realizado).toLocaleDateString(i18n.language === 'en' ? 'en-US' : 'es-MX')}
               </span>
             </div>
           )}
@@ -292,22 +294,22 @@ export default function EstudiosScreen() {
         <div style={styles.actionRow}>
           {isPending ? (
             <button style={styles.btnUpload} onClick={() => handleUpload(item)}>
-              <FiUpload size={16} /> Upload
+              <FiUpload size={16} /> {t('studies.upload')}
             </button>
           ) : (
             <>
               <button style={styles.btnView} onClick={() => handleView(item.id_examen)}>
-                <FiEye size={16} /> View
+                <FiEye size={16} /> {t('studies.view')}
               </button>
               <button style={styles.btnEdit} onClick={() => handleEdit(item.id_examen)}>
-                <FiEdit size={16} /> Edit
+                <FiEdit size={16} /> {t('studies.edit')}
               </button>
               <button 
                 style={{ ...styles.btnDelete, opacity: deleting ? 0.6 : 1 }}
                 onClick={() => handleDelete(item.id_examen)}
                 disabled={deleting}
               >
-                <FiTrash2 size={16} /> Delete
+                <FiTrash2 size={16} /> {t('studies.delete')}
               </button>
             </>
           )}
@@ -320,10 +322,10 @@ export default function EstudiosScreen() {
     <div style={styles.emptyCard}>
       <div style={styles.emptyEmoji}>📭</div>
       <div style={styles.emptyText}>
-        {isPending ? 'No pending requests' : 'No results'}
+        {isPending ? t('studies.noPendingRequests') : t('studies.noResults')}
       </div>
       <div style={styles.emptySubtext}>
-        {isPending ? 'All requests have been completed' : 'No results have been uploaded yet'}
+        {isPending ? t('studies.allRequestsCompleted') : t('studies.noResultsUploaded')}
       </div>
     </div>
   );
@@ -335,8 +337,8 @@ export default function EstudiosScreen() {
           <FiArrowLeft size={20} />
         </button>
         <div>
-          <div style={styles.headerEyebrow}>Studies</div>
-          <h1 style={styles.headerTitle}>Study Management</h1>
+          <div style={styles.headerEyebrow}>{t('studies.module')}</div>
+          <h1 style={styles.headerTitle}>{t('studies.management')}</h1>
         </div>
         <button type="button" onClick={onRefresh} style={styles.headerButton} disabled={refreshing}>
           <FiRefreshCw size={20} className={refreshing ? 'spin' : ''} />
@@ -345,10 +347,10 @@ export default function EstudiosScreen() {
 
       <div style={styles.heroCard}>
         <div>
-          <p style={styles.heroGreeting}>Welcome back, {user?.username || 'User'}</p>
-          <p style={styles.heroDate}>{new Date().toLocaleDateString('en-US', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' })}</p>
+          <p style={styles.heroGreeting}>{t('studies.welcomeBack', { user: user?.username || t('studies.user') })}</p>
+          <p style={styles.heroDate}>{new Date().toLocaleDateString(i18n.language === 'en' ? 'en-US' : 'es-MX', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' })}</p>
         </div>
-        <div style={styles.heroPill}>Total Pending: {counts.total}</div>
+        <div style={styles.heroPill}>{t('studies.totalPending')}: {counts.total}</div>
       </div>
 
       {error ? <div style={styles.alert}>{error}</div> : null}
@@ -384,7 +386,7 @@ export default function EstudiosScreen() {
             <div style={styles.emptyText}>{error}</div>
           </div>
         ) : loading && allItems.length === 0 ? (
-          <div style={styles.loadingCard}>Loading...</div>
+          <div style={styles.loadingCard}>{t('studies.loading')}</div>
         ) : allItems.length === 0 ? (
           renderEmpty()
         ) : (
@@ -407,7 +409,7 @@ export default function EstudiosScreen() {
 
       <footer style={styles.footer}>
         <FiArrowLeft size={14} style={{ transform: 'rotate(180deg)' }} />
-        <span>Secure data • All rights reserved</span>
+        <span>{t('studies.secureFooter')}</span>
       </footer>
     </div>
   );

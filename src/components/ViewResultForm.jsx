@@ -2,8 +2,10 @@ import React, { useState, useEffect } from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
 import { FiArrowLeft, FiEye, FiFolder, FiFile } from 'react-icons/fi';
 import api from '../services/api';
+import { useTranslation } from 'react-i18next';
 
 export default function ViewResultForm() {
+  const { t } = useTranslation();
   const navigate = useNavigate();
   const location = useLocation();
   const queryParams = new URLSearchParams(location.search);
@@ -21,7 +23,7 @@ export default function ViewResultForm() {
   useEffect(() => {
     const loadFiles = async () => {
       if (!id_examen) {
-        setError('Missing exam ID');
+        setError(t('studies.missingExamId'));
         setLoading(false);
         return;
       }
@@ -38,13 +40,13 @@ export default function ViewResultForm() {
         setError('');
       } catch (err) {
         console.error('Error loading files:', err);
-        setError('Could not load files.');
+        setError(t('studies.couldNotLoadFiles'));
       } finally {
         setLoading(false);
       }
     };
     loadFiles();
-  }, [id_examen, tipo]);
+  }, [id_examen, tipo, t]);
 
   const handleSelectFile = (file) => {
     setSelectedFile(file);
@@ -56,9 +58,9 @@ export default function ViewResultForm() {
       return (
         <div style={styles.previewPlaceholder}>
           <FiFile size={48} color="#cbd5e0" />
-          <p style={styles.placeholderText}>Select a file</p>
+          <p style={styles.placeholderText}>{t('studies.selectAFile')}</p>
           <p style={styles.placeholderSubtext}>
-            Click a file from the list to preview it
+            {t('studies.clickFileToPreview')}
           </p>
         </div>
       );
@@ -75,7 +77,7 @@ export default function ViewResultForm() {
           </div>
           <p style={styles.pdfName}>{selectedFile.nombre}</p>
           <div style={styles.pdfBadge}>PDF</div>
-          <p style={styles.pdfInfo}>Preview available for viewing</p>
+          <p style={styles.pdfInfo}>{t('studies.previewAvailable')}</p>
         </div>
       );
     } else if (['png', 'jpg', 'jpeg', 'gif'].includes(ext)) {
@@ -96,9 +98,9 @@ export default function ViewResultForm() {
       return (
         <div style={styles.previewPlaceholder}>
           <FiFile size={48} color="#a0aec0" />
-          <p style={styles.placeholderText}>Format not supported</p>
+          <p style={styles.placeholderText}>{t('studies.unsupportedFormat')}</p>
           <p style={styles.placeholderSubtext}>
-            Cannot preview this file type.
+            {t('studies.cannotPreview')}
           </p>
         </div>
       );
@@ -110,7 +112,7 @@ export default function ViewResultForm() {
       <div style={styles.page}>
         <div style={styles.centered}>
           <div style={styles.spinner}></div>
-          <span style={styles.loadingText}>Loading files...</span>
+          <span style={styles.loadingText}>{t('studies.loadingFiles')}</span>
         </div>
       </div>
     );
@@ -123,7 +125,7 @@ export default function ViewResultForm() {
           <FiFile size={48} color="#e53e3e" />
           <p style={styles.errorText}>{error}</p>
           <button style={styles.retryBtn} onClick={() => navigate(-1)}>
-            Go Back
+            {t('studies.goBack')}
           </button>
         </div>
       </div>
@@ -138,8 +140,8 @@ export default function ViewResultForm() {
           <FiArrowLeft size={20} />
         </button>
         <div>
-          <div style={styles.headerEyebrow}>Results</div>
-          <h1 style={styles.headerTitle}>View Results</h1>
+          <div style={styles.headerEyebrow}>{t('studies.results')}</div>
+          <h1 style={styles.headerTitle}>{t('studies.viewResults')}</h1>
         </div>
         <div style={{ width: 44 }}></div>
       </div>
@@ -150,12 +152,12 @@ export default function ViewResultForm() {
         <div style={styles.cardList}>
           <div style={styles.sectionHeader}>
             <FiFolder size={20} color="#64748b" />
-            <span style={styles.sectionTitle}>Available Files</span>
+            <span style={styles.sectionTitle}>{t('studies.availableFiles')}</span>
             <span style={styles.badge}>{archivos.length}</span>
           </div>
           <div style={styles.fileList}>
             {archivos.length === 0 ? (
-              <p style={styles.emptyText}>No files registered.</p>
+              <p style={styles.emptyText}>{t('studies.noFilesRegistered')}</p>
             ) : (
               archivos.map((file, index) => (
                 <button
@@ -181,7 +183,7 @@ export default function ViewResultForm() {
         <div style={styles.cardPreview}>
           <div style={styles.sectionHeader}>
             <FiEye size={20} color="#64748b" />
-            <span style={styles.sectionTitle}>Preview</span>
+            <span style={styles.sectionTitle}>{t('studies.preview')}</span>
           </div>
           <div style={styles.previewBox}>{renderPreview()}</div>
         </div>
@@ -189,7 +191,7 @@ export default function ViewResultForm() {
 
       <footer style={styles.footer}>
         <FiArrowLeft size={14} style={{ transform: 'rotate(180deg)' }} />
-        <span>Secure data • All rights reserved</span>
+        <span>{t('studies.secureFooter')}</span>
       </footer>
     </div>
   );
@@ -406,4 +408,3 @@ const styles = {
     fontSize: '15px',
   },
 };
-

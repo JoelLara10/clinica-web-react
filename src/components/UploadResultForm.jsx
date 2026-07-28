@@ -3,6 +3,7 @@ import { useNavigate, useLocation } from 'react-router-dom';
 import { FiArrowLeft, FiUpload, FiX, FiFile } from 'react-icons/fi';
 import api from '../services/api';
 import { getCache, setCache, invalidateCachePrefix, removeCache } from '../services/EstudiosCache';
+import { useTranslation } from 'react-i18next';
 
 const CACHE_KEYS = {
   counts: 'estudios_counts',
@@ -10,6 +11,7 @@ const CACHE_KEYS = {
 };
 
 export default function UploadResultForm() {
+  const { t } = useTranslation();
   const navigate = useNavigate();
   const location = useLocation();
   const queryParams = new URLSearchParams(location.search);
@@ -32,7 +34,7 @@ export default function UploadResultForm() {
 
   useEffect(() => {
     if (!id_examen) {
-      setError('Missing exam ID');
+      setError(t('studies.missingExamId'));
       setLoading(false);
       return;
     }
@@ -67,14 +69,14 @@ export default function UploadResultForm() {
         setError('');
       } catch (err) {
         console.error('Error loading request:', err);
-        setError(`Could not load information: ${err.message || 'Unknown error'}`);
+        setError(t('studies.loadInfoError', { error: err.message || t('studies.unknownError') }));
       } finally {
         setLoading(false);
       }
     };
 
     loadSolicitud();
-  }, [id_examen, pacienteParam, habitacionParam, estudiosParam]);
+  }, [id_examen, pacienteParam, habitacionParam, estudiosParam, t]);
 
   const pickDocuments = () => {
     fileInputRef.current?.click();
@@ -106,14 +108,14 @@ export default function UploadResultForm() {
 
   const handleSubmit = async () => {
     if (archivos.length === 0) {
-      window.alert('You must select at least one file.');
+      window.alert(t('studies.selectAtLeastOneFile'));
       return;
     }
 
     const MAX_SIZE = 25 * 1024 * 1024;
     for (const archivo of archivos) {
       if (archivo.size > MAX_SIZE) {
-        window.alert(`File "${archivo.name}" exceeds 25MB.`);
+        window.alert(t('studies.fileTooLarge', { file: archivo.name }));
         return;
       }
     }
@@ -138,11 +140,11 @@ export default function UploadResultForm() {
       await removeCache(CACHE_KEYS.counts);
       await removeCache(CACHE_KEYS.examenInfo(id_examen));
 
-      window.alert('Results uploaded successfully.');
+      window.alert(t('studies.uploadSuccess'));
       navigate(`/estudios?initialSection=${returnSection}`);
     } catch (err) {
       console.error('Error uploading:', err);
-      let msg = 'Error uploading results.';
+      let msg = t('studies.uploadError');
       if (err.response?.data?.error) msg = err.response.data.error;
       else if (err.message) msg = err.message;
       window.alert(msg);
@@ -156,7 +158,7 @@ export default function UploadResultForm() {
       <div style={styles.page}>
         <div style={styles.centered}>
           <div style={styles.spinner}></div>
-          <span style={styles.loadingText}>Loading data...</span>
+          <span style={styles.loadingText}>{t('studies.loadingData')}</span>
         </div>
       </div>
     );
@@ -167,7 +169,7 @@ export default function UploadResultForm() {
       <div style={styles.page}>
         <div style={styles.centered}>
           <div style={styles.errorText}>{error}</div>
-          <button style={styles.retryBtn} onClick={() => navigate(-1)}>Go Back</button>
+          <button style={styles.retryBtn} onClick={() => navigate(-1)}>{t('studies.goBack')}</button>
         </div>
       </div>
     );
@@ -181,8 +183,8 @@ export default function UploadResultForm() {
           <FiArrowLeft size={20} />
         </button>
         <div>
-          <div style={styles.headerEyebrow}>Results</div>
-          <h1 style={styles.headerTitle}>Upload Results</h1>
+          <div style={styles.headerEyebrow}>{t('studies.results')}</div>
+          <h1 style={styles.headerTitle}>{t('studies.uploadResults')}</h1>
         </div>
         <div style={{ width: 44 }}></div>
       </div>
@@ -190,22 +192,22 @@ export default function UploadResultForm() {
       {/* Hero / Info Card */}
       <div style={styles.heroCard}>
         <div style={styles.heroInfo}>
-          <p style={styles.heroGreeting}>Patient Details</p>
+          <p style={styles.heroGreeting}>{t('studies.patientDetails')}</p>
           <p style={styles.heroDate}>
-            {solicitud?.paciente || 'Patient'} • 🛏️ {solicitud?.habitacion || 'N/A'}
+            {solicitud?.paciente || t('studies.patient')} • 🛏️ {solicitud?.habitacion || 'N/A'}
           </p>
-          <p style={styles.heroStudy}>📋 {solicitud?.estudios || 'No studies'}</p>
+          <p style={styles.heroStudy}>📋 {solicitud?.estudios || t('studies.noStudies')}</p>
         </div>
         <div style={styles.heroPill}>
-          {tipo === 'LABORATORIO' ? 'Laboratory' : 'Imaging'}
+          {tipo === 'LABORATORIO' ? t('studies.laboratory') : t('studies.imaging')}
         </div>
       </div>
 
       {/* File Selection Card */}
       <div style={styles.card}>
-        <div style={styles.cardTitle}>Select Files</div>
+        <div style={styles.cardTitle}>{t('studies.selectFiles')}</div>
         <button style={styles.pickBtn} onClick={pickDocuments}>
-          <FiUpload size={18} /> Choose Files
+          <FiUpload size={18} /> {t('studies.chooseFiles')}
         </button>
         <input
           type="file"
@@ -233,16 +235,16 @@ export default function UploadResultForm() {
           </div>
         )}
 
-        <div style={styles.hint}>Formats: PDF, PNG, JPG, JPEG (max 25MB)</div>
+        <div style={styles.hint}>{t('studies.formatsHint')}</div>
       </div>
 
       {/* Observations Card */}
       <div style={styles.card}>
-        <div style={styles.cardTitle}>Observations</div>
+        <div style={styles.cardTitle}>{t('studies.observations')}</div>
         <textarea
           style={styles.textarea}
           rows="4"
-          placeholder="Relevant observations..."
+          placeholder={t('studies.observationsPlaceholder')}
           value={observaciones}
           onChange={(e) => setObservaciones(e.target.value)}
         />
@@ -262,14 +264,14 @@ export default function UploadResultForm() {
           <div style={styles.spinnerSmall}></div>
         ) : (
           <>
-            <FiUpload size={18} /> Upload Results
+            <FiUpload size={18} /> {t('studies.uploadResults')}
           </>
         )}
       </button>
 
       <footer style={styles.footer}>
         <FiArrowLeft size={14} style={{ transform: 'rotate(180deg)' }} />
-        <span>Secure data • All rights reserved</span>
+        <span>{t('studies.secureFooter')}</span>
       </footer>
     </div>
   );

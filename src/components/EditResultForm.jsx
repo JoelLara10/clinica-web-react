@@ -3,6 +3,7 @@ import { useNavigate, useLocation } from 'react-router-dom';
 import { FiArrowLeft, FiUpload, FiTrash2, FiSave, FiFile } from 'react-icons/fi';
 import api from '../services/api';
 import { invalidateCachePrefix, removeCache } from '../services/EstudiosCache';
+import { useTranslation } from 'react-i18next';
 
 const CACHE_KEYS = {
   counts: 'estudios_counts',
@@ -10,6 +11,7 @@ const CACHE_KEYS = {
 };
 
 export default function EditResultForm() {
+  const { t } = useTranslation();
   const navigate = useNavigate();
   const location = useLocation();
   const queryParams = new URLSearchParams(location.search);
@@ -33,7 +35,7 @@ export default function EditResultForm() {
   useEffect(() => {
     const loadInfo = async () => {
       if (!id_examen) {
-        setError('Missing exam ID');
+        setError(t('studies.missingExamId'));
         setLoading(false);
         return;
       }
@@ -58,14 +60,14 @@ export default function EditResultForm() {
         setError('');
       } catch (err) {
         console.error('Error loading info:', err);
-        setError('Could not load information.');
+        setError(t('studies.couldNotLoadInfo'));
       } finally {
         setLoading(false);
       }
     };
 
     loadInfo();
-  }, [id_examen, tipo]);
+  }, [id_examen, tipo, t]);
 
   const handleFileChange = (e) => {
     const files = Array.from(e.target.files);
@@ -78,11 +80,11 @@ export default function EditResultForm() {
       .filter((file) => {
         const ext = file.name.split('.').pop().toLowerCase();
         if (!validExtensions.includes(ext)) {
-          alert(`File "${file.name}" has an invalid format.`);
+          alert(t('studies.invalidFileFormat', { file: file.name }));
           return false;
         }
         if (file.size > MAX_SIZE) {
-          alert(`File "${file.name}" exceeds 25MB.`);
+          alert(t('studies.fileTooLarge', { file: file.name }));
           return false;
         }
         return true;
@@ -116,7 +118,7 @@ export default function EditResultForm() {
     );
 
     if (archivosExistentes.length === 0 && nuevosArchivos.length === 0) {
-      alert('You must keep at least one file or add a new one.');
+      alert(t('studies.keepOneFile'));
       return;
     }
 
@@ -149,11 +151,11 @@ export default function EditResultForm() {
       await removeCache(CACHE_KEYS.counts);
       await removeCache(CACHE_KEYS.examenInfo(id_examen));
 
-      alert('Changes saved successfully.');
+      alert(t('studies.changesSaved'));
       navigate(`/estudios?initialSection=${returnSection}`);
     } catch (err) {
       console.error('Error updating:', err);
-      let msg = 'Error updating results.';
+      let msg = t('studies.updateError');
       if (err.response?.data?.error) {
         msg = err.response.data.error;
       } else if (err.message) {
@@ -170,7 +172,7 @@ export default function EditResultForm() {
       <div style={styles.page}>
         <div style={styles.centered}>
           <div style={styles.spinner}></div>
-          <span style={styles.loadingText}>Loading data...</span>
+          <span style={styles.loadingText}>{t('studies.loadingData')}</span>
         </div>
       </div>
     );
@@ -182,7 +184,7 @@ export default function EditResultForm() {
         <div style={styles.centered}>
           <p style={styles.errorText}>{error}</p>
           <button style={styles.retryBtn} onClick={() => navigate(-1)}>
-            Go Back
+            {t('studies.goBack')}
           </button>
         </div>
       </div>
@@ -204,8 +206,8 @@ export default function EditResultForm() {
             <FiArrowLeft size={20} />
           </button>
           <div>
-            <div style={styles.headerEyebrow}>Results</div>
-            <h1 style={styles.headerTitle}>Edit Results</h1>
+            <div style={styles.headerEyebrow}>{t('studies.results')}</div>
+            <h1 style={styles.headerTitle}>{t('studies.editResults')}</h1>
           </div>
           <div style={{ width: 44 }}></div>
         </div>
@@ -215,20 +217,20 @@ export default function EditResultForm() {
           {/* Patient info card */}
           <div style={styles.card}>
             <div style={styles.infoRow}>
-              <span style={styles.label}>Patient:</span>
+              <span style={styles.label}>{t('studies.patient')}:</span>
               <span style={styles.value}>{info.paciente}</span>
             </div>
             <div style={styles.infoRow}>
-              <span style={styles.label}>Room:</span>
+              <span style={styles.label}>{t('studies.room')}:</span>
               <span style={styles.value}>{info.habitacion}</span>
             </div>
           </div>
 
           {/* Existing files card */}
           <div style={styles.card}>
-            <h3 style={styles.sectionTitle}>Existing Files</h3>
+            <h3 style={styles.sectionTitle}>{t('studies.existingFiles')}</h3>
             {info.archivos.length === 0 ? (
-              <p style={styles.emptyText}>No files registered.</p>
+              <p style={styles.emptyText}>{t('studies.noFilesRegistered')}</p>
             ) : (
               <ul style={styles.fileList}>
                 {info.archivos.map((nombre) => (
@@ -242,7 +244,7 @@ export default function EditResultForm() {
                         onChange={() => toggleEliminar(nombre)}
                         style={styles.checkbox}
                       />
-                      <span style={styles.switchText}>Delete</span>
+                      <span style={styles.switchText}>{t('studies.delete')}</span>
                     </label>
                   </li>
                 ))}
@@ -252,7 +254,7 @@ export default function EditResultForm() {
 
           {/* Add new files card */}
           <div style={styles.card}>
-            <h3 style={styles.sectionTitle}>Add New Files</h3>
+            <h3 style={styles.sectionTitle}>{t('studies.addNewFiles')}</h3>
             <input
               type="file"
               multiple
@@ -279,16 +281,16 @@ export default function EditResultForm() {
                 ))}
               </ul>
             )}
-            <p style={styles.hint}>Formats: PDF, PNG, JPG, JPEG (max 25MB)</p>
+            <p style={styles.hint}>{t('studies.formatsHint')}</p>
           </div>
 
           {/* Observations card */}
           <div style={styles.card}>
-            <h3 style={styles.sectionTitle}>Observations</h3>
+            <h3 style={styles.sectionTitle}>{t('studies.observations')}</h3>
             <textarea
               style={styles.textarea}
               rows="4"
-              placeholder="Relevant observations..."
+              placeholder={t('studies.observationsPlaceholder')}
               value={info.observaciones}
               onChange={(e) => setInfo({ ...info, observaciones: e.target.value })}
             />
@@ -308,7 +310,7 @@ export default function EditResultForm() {
               <div style={styles.spinnerSmall}></div>
             ) : (
               <>
-                <FiSave size={18} /> Save Changes
+                <FiSave size={18} /> {t('studies.saveChanges')}
               </>
             )}
           </button>
@@ -316,7 +318,7 @@ export default function EditResultForm() {
 
         <footer style={styles.footer}>
           <FiArrowLeft size={14} style={{ transform: 'rotate(180deg)' }} />
-          <span>Secure data • All rights reserved</span>
+          <span>{t('studies.secureFooter')}</span>
         </footer>
       </div>
     </>
