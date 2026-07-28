@@ -139,15 +139,15 @@ export default function Sidebar({ isOpen, onClose }) {
 
   if (isAdmin && currentModule === 'config') {
     menuSections.push({
-      title: 'Configuración',
+      title: t('sidebar.configSection'),
       items: [
-        { name: 'Usuarios',       icon: 'options-outline',  path: '/config/usuarios',       requiresPatient: false },
-        { name: 'Diagnósticos',    icon: 'clipboard-outline', path: '/config/diagnosticos',   requiresPatient: false },
-        { name: 'Camas',          icon: 'medkit-outline',   path: '/config/camas',          requiresPatient: false },
-        { name: 'Servicios',      icon: 'clipboard-outline',path: '/config/servicios',      requiresPatient: false },
-        { name: 'Automatización', icon: 'pulse-outline',    path: '/config/automatizacion', requiresPatient: false },
-        { name: 'Backup',         icon: 'folder-open-outline', path: '/config/backup',      requiresPatient: false },
-        { name: 'Mi Perfil',      icon: 'home-outline',     path: '/config/perfil',         requiresPatient: false },
+        { name: t('sidebar.configUsers'),      icon: 'options-outline',     path: '/config/usuarios',       requiresPatient: false },
+        { name: t('sidebar.configDiagnoses'),  icon: 'clipboard-outline',   path: '/config/diagnosticos',   requiresPatient: false },
+        { name: t('sidebar.configBeds'),       icon: 'medkit-outline',      path: '/config/camas',          requiresPatient: false },
+        { name: t('sidebar.configServices'),   icon: 'clipboard-outline',   path: '/config/servicios',      requiresPatient: false },
+        { name: t('sidebar.configAutomation'), icon: 'pulse-outline',       path: '/config/automatizacion', requiresPatient: false },
+        { name: t('sidebar.configBackup'),     icon: 'folder-open-outline', path: '/config/backup',         requiresPatient: false },
+        { name: t('sidebar.configProfile'),    icon: 'home-outline',        path: '/config/perfil',         requiresPatient: false },
       ],
     });
   }

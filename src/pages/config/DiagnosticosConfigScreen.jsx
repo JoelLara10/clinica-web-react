@@ -1,4 +1,5 @@
 import { useCallback, useEffect, useMemo, useState } from 'react';
+import { useTranslation } from 'react-i18next';
 import { FiChevronLeft, FiChevronRight, FiEdit2, FiSave, FiSearch, FiTrash2, FiX } from 'react-icons/fi';
 import ConfigHeader from './ConfigHeader';
 import api from '../../services/api';
@@ -9,6 +10,7 @@ const ITEMS_PER_PAGE = 8;
 const emptyForm = { id_cie10: '', diag: '' };
 
 export default function DiagnosticosConfigScreen() {
+  const { t } = useTranslation();
   const [diagnosticos, setDiagnosticos] = useState([]);
   const [form, setForm] = useState(emptyForm);
   const [editId, setEditId] = useState(null);
@@ -23,9 +25,9 @@ export default function DiagnosticosConfigScreen() {
       const response = await api.get('/catalog/diagnostics');
       setDiagnosticos(Array.isArray(response.data) ? response.data : []);
     } catch (error) {
-      setMessage(error.response?.data?.error || 'No se pudieron cargar los diagnósticos.');
+      setMessage(error.response?.data?.error || t('config.diagnosticLoadError'));
     } finally { setLoading(false); }
-  }, []);
+  }, [t]);
 
   useEffect(() => { load(); }, [load]);
 
@@ -41,15 +43,15 @@ export default function DiagnosticosConfigScreen() {
 
   const save = async (event) => {
     event.preventDefault();
-    if (!form.id_cie10.trim() || !form.diag.trim()) return setMessage('Captura la clave CIE-10 y el diagnóstico.');
+    if (!form.id_cie10.trim() || !form.diag.trim()) return setMessage(t('config.diagnosticRequired'));
     try {
       if (editId === null) await api.post('/catalog/diagnostics', form);
       else await api.put(`/catalog/diagnostics/${editId}`, form);
-      setMessage(editId === null ? 'Diagnóstico registrado correctamente.' : 'Diagnóstico actualizado correctamente.');
+      setMessage(editId === null ? t('config.diagnosticSaved') : t('config.diagnosticUpdated'));
       reset();
       await load();
     } catch (error) {
-      setMessage(error.response?.data?.error || 'No se pudo guardar el diagnóstico.');
+      setMessage(error.response?.data?.error || t('config.diagnosticSaveError'));
     }
   };
 
@@ -60,27 +62,27 @@ export default function DiagnosticosConfigScreen() {
   };
 
   const remove = async (item) => {
-    if (!window.confirm(`¿Eliminar el diagnóstico ${item.id_cie10}?`)) return;
+    if (!window.confirm(t('config.diagnosticDeleteConfirm', { code: item.id_cie10 }))) return;
     try {
       await api.delete(`/catalog/diagnostics/${item.id_diag}`);
-      setMessage('Diagnóstico eliminado correctamente.');
+      setMessage(t('config.diagnosticDeleted'));
       await load();
     } catch (error) {
-      setMessage(error.response?.data?.error || 'No se pudo eliminar el diagnóstico.');
+      setMessage(error.response?.data?.error || t('config.diagnosticDeleteError'));
     }
   };
 
-  return <main className="config-page"><ConfigHeader title="Catálogo de Diagnósticos" /><section className="config-content">
-    <form className="config-card config-main-card" onSubmit={save}><div className="config-card-header"><h2>{editId === null ? 'Registrar diagnóstico' : 'Editar diagnóstico'}</h2></div><div className="config-card-body">
-      <div className="config-section-box"><div className="config-grid-2"><div><label className="config-label">Clave CIE-10</label><input className="config-input" value={form.id_cie10} onChange={(e) => setForm({ ...form, id_cie10: e.target.value.toUpperCase() })} placeholder="H57.9" required /></div><div><label className="config-label">Diagnóstico</label><input className="config-input" value={form.diag} onChange={(e) => setForm({ ...form, diag: e.target.value })} required /></div></div></div>
-      <div className="config-form-footer"><button className="config-btn secondary" type="button" onClick={reset}><FiX /> Cancelar</button><button className="config-btn success" type="submit"><FiSave /> {editId === null ? 'Guardar' : 'Actualizar'} diagnóstico</button></div>
+  return <main className="config-page"><ConfigHeader title={t('config.headerDiagnoses')} /><section className="config-content">
+    <form className="config-card config-main-card" onSubmit={save}><div className="config-card-header"><h2>{editId === null ? t('config.diagnosticRegister') : t('config.diagnosticEdit')}</h2></div><div className="config-card-body">
+      <div className="config-section-box"><div className="config-grid-2"><div><label className="config-label">{t('config.diagnosticCode')}</label><input className="config-input" value={form.id_cie10} onChange={(e) => setForm({ ...form, id_cie10: e.target.value.toUpperCase() })} placeholder="H57.9" required /></div><div><label className="config-label">{t('config.diagnosticName')}</label><input className="config-input" value={form.diag} onChange={(e) => setForm({ ...form, diag: e.target.value })} required /></div></div></div>
+      <div className="config-form-footer"><button className="config-btn secondary" type="button" onClick={reset}><FiX /> {t('config.cancel')}</button><button className="config-btn success" type="submit"><FiSave /> {editId === null ? t('config.saveDiagnostic') : t('config.updateDiagnostic')}</button></div>
       {message && <div className="config-alert">{message}</div>}
     </div></form>
-    <h2 className="config-section-title">Diagnósticos registrados</h2>
-    <div className="config-search"><FiSearch className="config-search-icon" /><input className="config-input" value={search} onChange={(e) => { setSearch(e.target.value); setPage(1); }} placeholder="Buscar por clave CIE-10 o diagnóstico..." /></div>
-    {loading && <div className="config-card">Cargando diagnósticos...</div>}
-    {!loading && list.map((item) => <article className="config-card" key={item.id_diag}><div className="config-row"><div><h3>{item.id_cie10}</h3><p>{item.diag}</p></div></div><div className="config-actions"><button className="config-btn warning" type="button" onClick={() => edit(item)}><FiEdit2 /> Editar</button><button className="config-btn danger" type="button" onClick={() => remove(item)}><FiTrash2 /> Eliminar</button></div></article>)}
-    {!loading && !list.length && <div className="config-card">No hay diagnósticos registrados.</div>}
+    <h2 className="config-section-title">{t('config.diagnosticsRegistered')}</h2>
+    <div className="config-search"><FiSearch className="config-search-icon" /><input className="config-input" value={search} onChange={(e) => { setSearch(e.target.value); setPage(1); }} placeholder={t('config.diagnosticSearch')} /></div>
+    {loading && <div className="config-card">{t('config.diagnosticLoading')}</div>}
+    {!loading && list.map((item) => <article className="config-card" key={item.id_diag}><div className="config-row"><div><h3>{item.id_cie10}</h3><p>{item.diag}</p></div></div><div className="config-actions"><button className="config-btn warning" type="button" onClick={() => edit(item)}><FiEdit2 /> {t('config.edit')}</button><button className="config-btn danger" type="button" onClick={() => remove(item)}><FiTrash2 /> {t('config.delete')}</button></div></article>)}
+    {!loading && !list.length && <div className="config-card">{t('config.diagnosticEmpty')}</div>}
     {filtered.length > ITEMS_PER_PAGE && <div className="config-pagination"><button className="config-btn secondary" type="button" disabled={page === 1} onClick={() => setPage(page - 1)}><FiChevronLeft /></button><span className="config-page-pill">{page} / {totalPages}</span><button className="config-btn secondary" type="button" disabled={page === totalPages} onClick={() => setPage(page + 1)}><FiChevronRight /></button></div>}
   </section></main>;
 }
