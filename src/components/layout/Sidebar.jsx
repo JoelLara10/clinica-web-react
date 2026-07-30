@@ -61,6 +61,7 @@ export default function Sidebar({ isOpen, onClose }) {
     : currentPath.startsWith('/medico') ? 'medico'
     : currentPath.startsWith('/estudios') ? 'estudios'
     : currentPath.startsWith('/config') ? 'config'
+    : ['/admin', '/pacientes', '/nuevo-paciente', '/cuenta-paciente', '/censo', '/corte-caja'].some((path) => currentPath.startsWith(path)) ? 'administrativo'
     : 'general';
 
   const handleNav = (path) => {
@@ -148,6 +149,19 @@ export default function Sidebar({ isOpen, onClose }) {
         { name: t('sidebar.configAutomation'), icon: 'pulse-outline',       path: '/config/automatizacion', requiresPatient: false },
         { name: t('sidebar.configBackup'),     icon: 'folder-open-outline', path: '/config/backup',         requiresPatient: false },
         { name: t('sidebar.configProfile'),    icon: 'home-outline',        path: '/config/perfil',         requiresPatient: false },
+      ],
+    });
+  }
+
+  if ((isAdmin || role === 'administrativo') && currentModule === 'administrativo') {
+    menuSections.push({
+      title: t('sidebar.administration'),
+      items: [
+        { name: t('administrative.patients'), icon: 'folder-open-outline', path: '/pacientes', requiresPatient: false },
+        { name: t('administrative.newPatient'), icon: 'options-outline', path: '/nuevo-paciente', requiresPatient: false },
+        { name: t('administrative.patientAccount'), icon: 'document-text-outline', path: '/cuenta-paciente', requiresPatient: false },
+        { name: t('administrative.census'), icon: 'pulse-outline', path: '/censo', requiresPatient: false },
+        { name: t('administrative.cashCut'), icon: 'clipboard-outline', path: '/corte-caja', requiresPatient: false },
       ],
     });
   }

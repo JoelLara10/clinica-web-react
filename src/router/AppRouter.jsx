@@ -48,15 +48,12 @@ import DiagnosticosConfigScreen from '../pages/config/DiagnosticosConfigScreen';
 import AutomationConfigScreen from '../pages/config/AutomationConfigScreen';
 import BackupConfigScreen from '../pages/config/BackupConfigScreen';
 import ProfileConfigScreen from '../pages/config/ProfileConfigScreen';
-
-const Placeholder = ({ name }) => {
-  const { t } = useTranslation();
-  return (
-    <div style={{ padding: 32, fontSize: 24 }}>
-      {name} — {t('common.loading').replace('...', '')} construction
-    </div>
-  );
-};
+import AdminScreen from '../pages/administrativo/AdminScreen.jsx';
+import PacientesScreen from '../pages/administrativo/PacientesScreen.jsx';
+import NuevoPacienteScreen from '../pages/administrativo/NuevoPacienteScreen.jsx';
+import PacienteDetailScreen from '../pages/administrativo/PacienteDetailScreen.jsx';
+import CensoScreen from '../pages/administrativo/CensoScreen.jsx';
+import CorteCajaScreen from '../pages/administrativo/CorteCajaScreen.jsx';
 
 const PrivateRoute = ({ children }) => {
   const { t } = useTranslation();
@@ -101,13 +98,15 @@ export default function AppRouter() {
 
                 {isAdminOrAdministrativo && (
                   <>
-                    <Route path="admin" element={<Placeholder name="Admin" />} />
-                    <Route path="pacientes" element={<Placeholder name="Pacientes" />} />
-                    <Route path="pacientes/:id" element={<Placeholder name="Detalle Paciente" />} />
-                    <Route path="nuevo-paciente" element={<Placeholder name="Nuevo Paciente" />} />
-                    <Route path="censo" element={<Placeholder name="Censo" />} />
-                    <Route path="corte-caja" element={<Placeholder name="Corte Caja" />} />
-                    <Route path="camas" element={<Placeholder name="Camas" />} />
+                    <Route path="admin" element={<AdminScreen />} />
+                    <Route path="pacientes" element={<PacientesScreen />} />
+                    <Route path="pacientes/:id" element={<PacienteDetailScreen />} />
+                    <Route path="pacientes/:id/editar" element={<NuevoPacienteScreen />} />
+                    <Route path="nuevo-paciente" element={<NuevoPacienteScreen />} />
+                    <Route path="cuenta-paciente" element={<PacienteDetailScreen />} />
+                    <Route path="censo" element={<CensoScreen />} />
+                    <Route path="corte-caja" element={<CorteCajaScreen />} />
+                    <Route path="camas" element={<Navigate to="/config/camas" replace />} />
                   </>
                 )}
 
